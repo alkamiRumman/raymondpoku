@@ -1,8 +1,8 @@
-<div class="row">
-	<div class="col-md-4 mb-3">
-		<label class="form-label">Select Client <sup class="text-danger">*</sup></label>
+<div class="row align-items-end mb-3">
+	<div class="col-md-4">
+		<label class="form-label fw-semibold">Select Client <sup class="text-danger">*</sup></label>
 		<select class="form-select" name="clientId" id="clientIdCalendar" data-width="100%" required>
-			<option value="">Select Client</option>
+			<option value="">— Choose a client —</option>
 			<?php foreach ($clients as $client) { ?>
 				<option data-billrate="<?= $client->billRate ?>"
 						data-budgetedhours="<?= $client->budgetedHours ?>"
@@ -10,318 +10,245 @@
 			<?php } ?>
 		</select>
 	</div>
-	<div class="col-md-5 mb-3">
-		<table id="calendarTable" class="table table-bordered table-responsive-sm table-sm">
+	<div class="col-md-5">
+		<table id="calendarTable" class="table table-bordered table-sm mb-0">
 			<tbody>
 			<tr>
-				<th>Budgeted Hours</th>
-				<td>
-					<div id="budgetedHoursCalendar"></div>
-				</td>
+				<th class="ps-3">Budgeted Hours</th>
+				<td><span id="budgetedHoursCalendar">—</span></td>
 			</tr>
 			<tr>
-				<th>Scheduled Hours for <span id="monthName"></span></th>
-				<td>
-					<div id="scheduledHoursCalendar"></div>
-				</td>
+				<th class="ps-3">Scheduled Hours — <span id="monthName"></span></th>
+				<td><span id="scheduledHoursCalendar">—</span></td>
 			</tr>
 			</tbody>
 		</table>
 	</div>
-	<div class="col-md-3 text-center mb-3 copydata" style="display: none">
-		<br>
-		<button id="copy" class="btn btn-lg btn-primary me-3">Copy data to next month</button>
+	<div class="col-md-3 copydata" style="display:none">
+		<button id="copy" class="btn btn-primary w-100">
+			<i data-feather="copy" class="me-1" style="width:15px;height:15px"></i>
+			<span id="copyBtnLabel">Copy to next month</span>
+		</button>
 	</div>
 </div>
-<div class="row">
-	<div class="col-12 col-xl-12">
-		<table class="table table-sm">
+
+<div class="row mb-3">
+	<div class="col-12">
+		<table class="table table-sm mb-0">
 			<tr class="text-center">
-				<th>Service Type</th>
-				<td style="background-color: #F38938">Attendant Care</td>
-				<td style="background-color: #98FB98">Housekeeping</td>
-				<td style="background-color: #E6E6FA">Wound Care</td>
-				<td style="background-color: #d3d357">Travel/Transport</td>
-				<td style="background-color: #F333FF">Respite</td>
+				<th class="text-start ps-0">Service Type</th>
+				<td style="background-color:#F38938;color:#fff;border-radius:4px">Attendant Care</td>
+				<td style="background-color:#4ade80;color:#166534;border-radius:4px">Housekeeping</td>
+				<td style="background-color:#c4b5fd;color:#4c1d95;border-radius:4px">Wound Care</td>
+				<td style="background-color:#fde047;color:#713f12;border-radius:4px">Travel/Transport</td>
+				<td style="background-color:#f0abfc;color:#701a75;border-radius:4px">Respite</td>
 			</tr>
 		</table>
 	</div>
 </div>
+
 <div class="row">
-	<div class="col-12 col-xl-12 stretch-card">
-		<div class="card-body" style="margin-top: 10px">
-			<div id='fullcalendar'></div>
-		</div>
+	<div class="col-12">
+		<div id="fullcalendar"></div>
 	</div>
 </div>
+
 <style>
-	.fc-event {
-		margin: 0 !important;
-		padding: 0 !important;
-		border: none;
-	}
+.fc-event { margin:0 !important; padding:0 !important; border:none; }
 </style>
+
 <script>
-	var calendar;
-	document.addEventListener('DOMContentLoaded', function () {
-		var calendarEl = document.getElementById('fullcalendar');
-		var userChangedView = false;
+var calendar;
+var currentViewMonth = new Date().getMonth();   // 0-based
+var currentViewYear  = new Date().getFullYear();
 
-		function initFullCalendar(viewType, height, fontSize) {
-			calendar = new FullCalendar.Calendar(calendarEl, {
-				headerToolbar: {
-					left: "prev,next",
-					center: 'title',
-					right: 'dayGridMonth,listMonth'
-				},
-				fixedWeekCount: true,
-				initialView: viewType,
-				eventOverlap: true,
-				timeZone: 'UTC',
-				hiddenDays: [],
-				navLinks: true,
-				dayMaxEvents: 5,
-				contentHeight: 'auto',
-				aspectRatio: 1.35,
-				height: height,
-				events: [],
-				eventContent: function (arg) {
-					return {
-						html: '<p onclick="loadPopup(\'<?= base_url("admin/editServiceCalendar/") ?>' + arg.event.id + '\')" class="text-center" style="cursor: default; font-weight: bold; font-size: ' + fontSize + 'px">' + arg.event.title + '<br>' + arg.event.extendedProps.description + '</p>'
-					};
-				},
-				viewDidMount: function () {
-					userChangedView = false; // Reset flag after view is rendered
-				},
-				dateClick: function (info) {
-					var clientId = $('#clientIdCalendar').find(":selected").val();
-					if (clientId) {
-						loadPopup('<?= admin_url('addServiceFromCalendar/') ?>' + clientId + '/' + info.dateStr)
-					} else {
-						Toast.fire({
-							icon: "warning",
-							title: 'Select a Client First!'
-						});
-					}
-				},
-				datesSet: function (info) {
-					var clientId = $('#clientIdCalendar').find(":selected").val();
-					var newDate = new Date(info.view.activeStart);
-					var newDate1 = newDate.setDate(newDate.getDate() + 7);
-					var monthName = new Date(newDate1).getMonth();
-					var monthNames = ["January", "February", "March", "April", "May", "June",
-						"July", "August", "September", "October", "November", "December"];
-					$('#monthName').text(monthNames[monthName]);
-					var year = new Date(newDate1).getFullYear();
-					if (new Date().getMonth() === monthName && new Date().getFullYear() === year && clientId) {
-						$('.copydata').show();
-					} else {
-						$('.copydata').hide();
-					}
-					if (clientId) {
-						$.ajax({
-							type: "GET",
-							url: "<?= admin_url('getScheduledHoursOtherMonth/') ?>" + clientId + '/' + (monthName + 1) + '/' + year,
-							success: function (response) {
-								console.log(response);
-								$('#scheduledHoursCalendar').text(response)
-							}
-						});
-					}
-				}
-			});
+document.addEventListener('DOMContentLoaded', function () {
+	var calendarEl = document.getElementById('fullcalendar');
+	var userChangedView = false;
 
-			calendar.on('viewDidMount', function () {
-				userChangedView = false; // Reset flag after the calendar view changes
-			});
-			calendar.render();
+	var serviceTypeColors = {
+		'Attendant Care': '#F38938',
+		'Housekeeping':   '#4ade80',
+		'Wound Care':     '#c4b5fd',
+		'Travel/Transport': '#fde047',
+		'Respite':        '#f0abfc',
+	};
+
+	function formatTime(time) {
+		var parts = time.split(':');
+		var h = parseInt(parts[0], 10);
+		var m = parts[1];
+		var suffix = h >= 12 ? 'pm' : 'am';
+		h = h % 12 || 12;
+		return h + ':' + m + ' ' + suffix;
+	}
+
+	var monthNames = ["January","February","March","April","May","June",
+					  "July","August","September","October","November","December"];
+
+	function updateCopyButton(clientId) {
+		if (clientId) {
+			$('.copydata').show();
+			var nextMonth = currentViewMonth === 11 ? 0 : currentViewMonth + 1;
+			var nextYear  = currentViewMonth === 11 ? currentViewYear + 1 : currentViewYear;
+			$('#copyBtnLabel').text('Copy ' + monthNames[currentViewMonth] + ' → ' + monthNames[nextMonth]);
+			if (window.feather) feather.replace();
+		} else {
+			$('.copydata').hide();
 		}
+	}
 
-		function determineViewAndHeight() {
-			if (userChangedView) return; // Exit if user changed the view manually
+	function loadScheduledHours(clientId) {
+		if (!clientId) return;
+		$.ajax({
+			type: 'GET',
+			url: '<?= admin_url('getScheduledHoursOtherMonth/') ?>' + clientId + '/' + (currentViewMonth + 1) + '/' + currentViewYear,
+			success: function (response) { $('#scheduledHoursCalendar').text(response || '0'); }
+		});
+	}
 
-			var viewType = window.innerWidth >= 768 ? 'dayGridMonth' : 'listMonth';
-			var height = window.innerWidth >= 768 ? null : window.innerHeight;
-			var fontSize = window.innerWidth >= 768 ? 12 : 9;
-
-			if (calendar) {
-				var currentView = calendar.view.type;
-				if (currentView !== viewType) {
-					calendar.destroy();
-					initFullCalendar(viewType, height, fontSize);
-				} else if (height !== null && calendar.el.offsetHeight !== height) {
-					calendar.setOption('height', height, fontSize);
-					calendar.render(); // Render the calendar after adjusting the height
+	function initFullCalendar(viewType, height, fontSize) {
+		calendar = new FullCalendar.Calendar(calendarEl, {
+			headerToolbar: {
+				left:   'prev,next',
+				center: 'title',
+				right:  'dayGridMonth,listMonth'
+			},
+			fixedWeekCount: true,
+			initialView:    viewType,
+			eventOverlap:   true,
+			timeZone:       'UTC',
+			navLinks:       true,
+			dayMaxEvents:   5,
+			contentHeight:  'auto',
+			aspectRatio:    1.35,
+			height:         height,
+			events:         [],
+			eventContent: function (arg) {
+				return {
+					html: '<p onclick="loadPopup(\'<?= base_url("admin/editServiceCalendar/") ?>' + arg.event.id + '\')" '
+						+ 'class="text-center" style="cursor:pointer;font-weight:600;font-size:' + fontSize + 'px;line-height:1.3;padding:1px 2px">'
+						+ arg.event.title + '<br>' + arg.event.extendedProps.description + '</p>'
+				};
+			},
+			viewDidMount: function () { userChangedView = false; },
+			dateClick: function (info) {
+				var clientId = $('#clientIdCalendar').val();
+				if (clientId) {
+					loadPopup('<?= admin_url('addServiceFromCalendar/') ?>' + clientId + '/' + info.dateStr);
+				} else {
+					Toast.fire({ icon: 'warning', title: 'Select a client first!' });
 				}
-			} else {
+			},
+			datesSet: function (info) {
+				var d = new Date(info.view.activeStart);
+				d.setDate(d.getDate() + 7);
+				currentViewMonth = d.getMonth();
+				currentViewYear  = d.getFullYear();
+				$('#monthName').text(monthNames[currentViewMonth] + ' ' + currentViewYear);
+				var clientId = $('#clientIdCalendar').val();
+				updateCopyButton(clientId);
+				loadScheduledHours(clientId);
+			}
+		});
+		calendar.on('viewDidMount', function () { userChangedView = false; });
+		calendar.render();
+	}
+
+	function determineViewAndHeight() {
+		if (userChangedView) return;
+		var viewType  = window.innerWidth >= 768 ? 'dayGridMonth' : 'listMonth';
+		var height    = window.innerWidth >= 768 ? null : window.innerHeight;
+		var fontSize  = window.innerWidth >= 768 ? 12 : 9;
+		if (calendar) {
+			if (calendar.view.type !== viewType) {
+				calendar.destroy();
 				initFullCalendar(viewType, height, fontSize);
+			} else if (height !== null) {
+				calendar.setOption('height', height);
+				calendar.render();
 			}
+		} else {
+			initFullCalendar(viewType, height, fontSize);
 		}
+	}
 
-		determineViewAndHeight();
-		window.addEventListener('resize', function () {
-			determineViewAndHeight();
-		});
+	determineViewAndHeight();
+	window.addEventListener('resize', function () { determineViewAndHeight(); });
 
-		function formatTime(time) {
-			var [hours, minutes] = time.split(':');
-			hours = parseInt(hours, 10);
-			var suffix = hours >= 12 ? 'pm' : 'am';
-			hours = hours % 12 || 12;
-			return hours + ':' + minutes + ' ' + suffix;
-		}
+	$("#clientIdCalendar").on('change', function () {
+		var clientId      = $(this).val();
+		var budgetedHours = $(this).find(':selected').data('budgetedhours');
+		$('#budgetedHoursCalendar').text(budgetedHours || '—');
+		updateCopyButton(clientId);
 
-		var serviceTypeColors = {
-			'Attendant Care': '#F38938',
-			'Housekeeping': '#98FB98',
-			'Wound Care': '#E6E6FA',
-			'Travel/Transport': '#d3d357',
-			'Respite': '#F333FF',
-		};
+		if (!clientId) { calendar.setOption('eventSources', [[]]); return; }
 
-		$("#clientIdCalendar").on('change', function () {
-			var clientId = $('#clientIdCalendar').find(":selected").val();
-			var budgetedHours = $(this).find(':selected').data('budgetedhours');
-			$('#budgetedHoursCalendar').text(budgetedHours);
-
-			$.ajax({
-				url: '<?= admin_url('getAllService/') ?>' + clientId,
-				type: 'GET',
-				dataType: 'json',
-				success: function (data) {
-					var calendarEvents = [];
-					console.log(data);
-					data.forEach(function (eventData) {
-						var title = formatTime(eventData.startTime) + ' - ' + formatTime(eventData.endTime);
-						var serviceType = eventData.serviceType;
-						var color = serviceTypeColors[serviceType] || '';
-						calendarEvents.push({
-							id: eventData.id,
-							start: eventData.date,
-							end: eventData.date,
-							allDay: true,
-							title: title,
-							backgroundColor: color,
-							description: eventData.firstName + ' ' + eventData.lastName,
-						});
-					});
-					calendar.setOption('eventSources', [calendarEvents]);
-
-					// Calculate monthName and year after updating the calendar
-					var newDate = new Date(calendar.view.currentStart);
-					var newDate1 = newDate.setDate(newDate.getDate() + 7);
-					var monthName = new Date(newDate1).getMonth();
-					var year = new Date(newDate1).getFullYear();
-
-					console.log(monthName);
-					var monthNames = ["January", "February", "March", "April", "May", "June",
-						"July", "August", "September", "October", "November", "December"];
-					$('#monthName').text(monthNames[monthName]);
-
-					// Show or hide the copydata button based on the current month and year
-					if (new Date().getMonth() === monthName && new Date().getFullYear() === year && clientId) {
-						$('.copydata').show();
-					} else {
-						$('.copydata').hide();
-					}
-
-					// Now that monthName is defined, you can make the second AJAX call
-					$.ajax({
-						type: "GET",
-						url: "<?= admin_url('getScheduledHoursOtherMonth/') ?>" + clientId + '/' + (monthName + 1) + '/' + year,
-						success: function (response) {
-							$('#scheduledHoursCalendar').text(response);
-						},
-						error: function (xhr, status, error) {
-							console.error('Error fetching scheduled hours:', error);
-						}
-					});
-				},
-				error: function (xhr, status, error) {
-					console.error('Error fetching data from server:', error);
-				}
-			});
-		});
-
-		// Detect user view change and set flag
-		calendarEl.addEventListener('click', function () {
-			if (!userChangedView) {
-				userChangedView = true;
-			}
-		});
-
-		$('#copy').on('click', function () {
-			var clientId = $('#clientIdCalendar').find(":selected").val();
-			if (!clientId) {
-				Toast.fire({
-					icon: "warning",
-					title: 'Select a Client First!'
+		$.ajax({
+			url:      '<?= admin_url('getAllService/') ?>' + clientId,
+			type:     'GET',
+			dataType: 'json',
+			success:  function (data) {
+				var events = data.map(function (e) {
+					return {
+						id:              e.id,
+						start:           e.date,
+						end:             e.date,
+						allDay:          true,
+						title:           formatTime(e.startTime) + ' - ' + formatTime(e.endTime),
+						backgroundColor: serviceTypeColors[e.serviceType] || '#94a3b8',
+						description:     e.firstName + ' ' + e.lastName
+					};
 				});
-				return;
-			}
-
-			var submitButton = $(this);
-			submitButton.prop('disabled', true).text('Copying, please wait...');
-			$.ajax({
-				url: '<?= admin_url('copyServiceToNextMonth') ?>',
-				type: 'POST',
-				data: {clientId: clientId},
-				success: function (response) {
-					var data = JSON.parse(response);
-					if (data.status == 'success') {
-						Toast.fire({
-							icon: "success",
-							title: data.message
-						});
-					} else {
-						Toast.fire({
-							icon: "error",
-							title: data.message
-						});
-					}
-					submitButton.prop('disabled', false).text('Copy data to next month');
-				},
-				error: function (xhr, status, error) {
-					Toast.fire({
-						icon: "error",
-						title: error
-					});
-					console.error('Error copying data:', error);
-					submitButton.prop('disabled', false).text('Copy data to next month');
-				}
-			});
-
-			$.ajax({
-				url: "<?= admin_url('getAllService/') ?>" + clientId,
-				type: 'GET',
-				dataType: 'json',
-				success: function (data) {
-					var calendarEvents = [];
-					data.forEach(function (eventData) {
-						var title = formatTime(eventData.startTime) + ' - ' + formatTime(eventData.endTime);
-						var serviceType = eventData.serviceType;
-						var color = serviceTypeColors[serviceType] || '';
-						calendarEvents.push({
-							id: eventData.id,
-							start: eventData.date,
-							end: eventData.date,
-							allDay: true,
-							title: title,
-							backgroundColor: color,
-							description: eventData.firstName + ' ' + eventData.lastName,
-						});
-					});
-					calendar.setOption('eventSources', [calendarEvents]);
-				},
-				error: function (xhr, status, error) {
-					Toast.fire({
-						icon: "error",
-						title: 'Error fetching current month data.'
-					});
-					console.error('Error fetching data from server:', error);
-					submitButton.prop('disabled', false).text('Copy data to next month');
-				}
-			});
+				calendar.setOption('eventSources', [events]);
+				loadScheduledHours(clientId);
+				updateCopyButton(clientId);
+			},
+			error: function (x, s, e) { console.error('Events load error:', e); }
 		});
 	});
+
+	calendarEl.addEventListener('click', function () { userChangedView = true; });
+
+	$('#copy').on('click', function () {
+		var clientId = $('#clientIdCalendar').val();
+		if (!clientId) {
+			Toast.fire({ icon: 'warning', title: 'Select a client first!' });
+			return;
+		}
+		var btn = $(this);
+		btn.prop('disabled', true).find('#copyBtnLabel').text('Copying…');
+
+		$.ajax({
+			url:     '<?= admin_url('copyServiceToNextMonth') ?>',
+			type:    'POST',
+			data:    { clientId: clientId, month: currentViewMonth + 1, year: currentViewYear },
+			success: function (response) {
+				var data = JSON.parse(response);
+				Toast.fire({ icon: data.status === 'success' ? 'success' : 'error', title: data.message });
+				// Reload calendar events
+				$.ajax({
+					url: '<?= admin_url('getAllService/') ?>' + clientId,
+					type: 'GET', dataType: 'json',
+					success: function (d) {
+						var events = d.map(function (e) {
+							return {
+								id:              e.id, start: e.date, end: e.date, allDay: true,
+								title:           formatTime(e.startTime) + ' - ' + formatTime(e.endTime),
+								backgroundColor: serviceTypeColors[e.serviceType] || '#94a3b8',
+								description:     e.firstName + ' ' + e.lastName
+							};
+						});
+						calendar.setOption('eventSources', [events]);
+					}
+				});
+			},
+			error: function (x, s, e) { Toast.fire({ icon: 'error', title: 'Request failed.' }); },
+			complete: function () {
+				btn.prop('disabled', false);
+				updateCopyButton(clientId);
+			}
+		});
+	});
+});
 </script>

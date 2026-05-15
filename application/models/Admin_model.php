@@ -388,4 +388,27 @@ class Admin_model extends CI_Model
 		$this->db->where('s.invoiceId', $id);
 		return $this->db->get()->result();
 	}
+
+	function getServicesByCaregiverMonth($caregiverId, $month, $year)
+	{
+		$this->db->select('s.*, c.firstName, c.lastName, cl.name as clientName');
+		$this->db->from(TABLE_SERVICES . ' as s');
+		$this->db->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
+		$this->db->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
+		$this->db->where('s.caregiverId', $caregiverId);
+		$this->db->where('MONTH(s.date)', $month);
+		$this->db->where('YEAR(s.date)', $year);
+		$this->db->order_by('s.date', 'ASC');
+		$this->db->order_by('s.startTime', 'ASC');
+		return $this->db->get()->result();
+	}
+
+	function getInvoicesByClientId($clientId)
+	{
+		$this->db->select('*');
+		$this->db->from(TABLE_INVOICES);
+		$this->db->where('clientId', $clientId);
+		$this->db->order_by('invoiceDate', 'ASC');
+		return $this->db->get()->result();
+	}
 }

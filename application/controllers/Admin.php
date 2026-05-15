@@ -235,12 +235,14 @@ class Admin extends MY_Controller
 
 	function getClients()
 	{
-		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
-            <button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteClients/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
-		$this->datatables->select('id, name, address, phone, dol, referralSource, budget, referralDate, billingAddress, companyName, adjustorName, adjustorEmail, 
-		adjustorPhone, adjustorFax, billRate, budgetedHours, status, totalBilled, totalPaid, outstanding, createAt, updateAt');
-		$this->datatables->from(TABLE_CLIENTS);
-		$this->datatables->where(array('status' => 0));
+		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')" class="btn btn-xs btn-success me-1">Edit</a>'
+			. '<a href="' . base_url('admin/clientStatement/$1') . '" class="btn btn-xs btn-info me-1">Statement</a>'
+			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteClients/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$this->datatables->select('c.id as id, c.name, c.address, c.phone, c.dol, c.referralSource, c.budget, c.referralDate, c.billingAddress, c.companyName, c.adjustorName, c.adjustorEmail, c.adjustorPhone, c.adjustorFax, c.billRate, c.budgetedHours, c.status, COALESCE(SUM(i.total),0) as totalBilled, COALESCE(SUM(i.paidAmount),0) as totalPaid, COALESCE(SUM(i.dueAmount),0) as outstanding, c.createAt, c.updateAt');
+		$this->datatables->from(TABLE_CLIENTS . ' as c');
+		$this->datatables->join(TABLE_INVOICES . ' as i', 'i.clientId = c.id', 'left');
+		$this->datatables->where(array('c.status' => 0));
+		$this->datatables->group_by('c.id');
 		$this->datatables->addColumn('actions', $action, 'id');
 		$this->datatables->generate();
 	}
@@ -556,11 +558,17 @@ class Admin extends MY_Controller
 	public function copyServiceToNextMonth()
 	{
 		$clientId = $this->input->post('clientId');
+		$month    = (int) $this->input->post('month');
+		$year     = (int) $this->input->post('year');
 
-		$currentMonthStart = date('Y-m-01');
-		$currentMonthEnd = date('Y-m-t');
+		if ($month && $year) {
+			$currentMonthStart = date('Y-m-01', mktime(0, 0, 0, $month, 1, $year));
+			$currentMonthEnd   = date('Y-m-t',  mktime(0, 0, 0, $month, 1, $year));
+		} else {
+			$currentMonthStart = date('Y-m-01');
+			$currentMonthEnd   = date('Y-m-t');
+		}
 
-		// Fetch current month's data
 		$currentMonthData = $this->admin->getServicesByDateRange($currentMonthStart, $currentMonthEnd, $clientId);
 
 //		return dnp($currentMonthData);
@@ -619,6 +627,26 @@ class Admin extends MY_Controller
 		$this->data['title'] = "Service Calendar";
 		$this->data['clients'] = $this->admin->getClients();
 		$this->makeView('/calendar');
+	}
+
+	function caregiverCalendar()
+	{
+		$this->data['title'] = "Caregiver Calendar";
+		$this->data['caregivers'] = $this->admin->getCaregivers();
+		$this->makeView('/caregiverCalendar');
+	}
+
+	function getCaregiverCalendarServices($caregiverId, $month, $year)
+	{
+		echo json_encode($this->admin->getServicesByCaregiverMonth($caregiverId, $month, $year));
+	}
+
+	function clientStatement($clientId)
+	{
+		$this->data['title'] = "Client Statement";
+		$this->data['client'] = $this->admin->getClientsById($clientId);
+		$this->data['invoices'] = $this->admin->getInvoicesByClientId($clientId);
+		$this->makeView('/clientStatement');
 	}
 
 	function getAllService($clientId)
