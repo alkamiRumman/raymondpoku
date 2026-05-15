@@ -1,0 +1,813 @@
+<?php
+
+/**
+ * @property Admin_model $admin
+ */
+class Admin extends MY_Controller
+{
+	public $path = '/admin';
+
+	function __construct()
+	{
+		parent::__construct();
+		$this->ifNotLogin();
+		$this->ifNotAdmin();
+		$this->load->model('Admin_model', 'admin');
+	}
+
+	function index()
+	{
+		$this->data['title'] = 'Dashboard';
+		$this->data['totalCaregiver'] = $this->admin->getTotalCaregiver();
+		$this->data['totalClient'] = $this->admin->getTotalClient();
+		$this->data['serviceHoursToday'] = $this->admin->getServiceHoursToday()->totalHours;
+		$this->data['serviceHoursWeek'] = $this->admin->getServiceHoursWeek()->totalHours;
+		$this->data['totalAmountToday'] = $this->admin->getTotalAmountToday()->totalAmount;
+		$this->data['totalAmountWeek'] = $this->admin->getTotalAmountWeek()->totalAmount;
+		$this->data['billedAmountToday'] = $this->admin->getBilledAmountToday()->billAmount;
+		$this->data['billedAmountWeek'] = $this->admin->getBilledAmountWeek()->billAmount;
+		$this->data['scheduledHours'] = json_encode($this->admin->getScheduledHourDashboard());
+		$this->data['invoiceData'] = json_encode($this->admin->getInvoiceData());
+
+		$query1 = $this->db->query("SELECT SUM(d.totalAmount) as totalAmount, SUM(d.paidAmount) as paidAmount, MONTHNAME(d.invoiceDate) as month_name FROM invoices d 
+            join clients c on d.clientId = c.id where YEAR(d.invoiceDate) = '" . date('Y')
+			. "' GROUP BY MONTH(d.invoiceDate) ORDER BY MONTH(d.invoiceDate) ASC")->result();
+		foreach ($query1 as $row) {
+//			return dnp($row);
+			$data1['label'][] = $row->month_name;
+			$data1['totalAmount'][] = $totalAmount = (isset($row->totalAmount) ? round($row->totalAmount, 2) : 0);
+			$data1['paidAmount'][] = $paidAmount = isset($row->paidAmount) ? round($row->paidAmount, 2) : 0;
+			$data1['totalDue'][] = round($totalAmount - $paidAmount, 2);
+		}
+		if ($data1) {
+			$this->data['data1'] = json_encode($data1);
+		}
+
+		$query2 = $this->db->query("SELECT SUM(s.hours) as totalHours, MONTHNAME(s.date) as month_name FROM services s join caregivers c on s.caregiverId = c.id join clients cl on s.clientId = cl.id where YEAR(s.date) = '" . date("Y")
+			. "' GROUP BY MONTH(s.date)")->result();
+
+		$query3 = $this->db->query("SELECT SUM(i.totalHours) as totalInvoiceHours, MONTHNAME(i.invoiceDate) as month_name FROM invoices i join clients cl on i.clientId = cl.id where YEAR(i.invoiceDate) = '" . date('Y')
+			. "' GROUP BY MONTH(i.invoiceDate)")->result();
+
+		// return dnp($query3);
+		$result = array();
+		$data11 = array();
+
+
+		foreach (array_merge($query2, $query3) as $entry) {
+			if (!isset($result[$entry->month_name])) {
+				$result[$entry->month_name] = $entry;
+			} else {
+				foreach ($entry as $key => $value) {
+					$result[$entry->month_name]->$key = $value;
+				}
+			}
+		}
+		function getMonthNumber($month_name)
+		{
+			return date('n', strtotime($month_name . ' 1'));
+		}
+
+		$sorted_result = array_values($result);
+
+		usort($sorted_result, function ($a, $b) {
+			return getMonthNumber($a->month_name) - getMonthNumber($b->month_name);
+		});
+
+		$result = [];
+		foreach ($sorted_result as $entry) {
+			$result[$entry->month_name] = $entry;
+		}
+
+		foreach ($result as $row) {
+//			return dnp($row);
+			$data11['label'][] = $row->month_name;
+			$data11['totalHours'][] = (isset($row->totalHours) ? round($row->totalHours, 2) : 0);
+			$data11['totalInvoiceHours'][] = isset($row->totalInvoiceHours) ? round($row->totalInvoiceHours, 2) : 0;
+		}
+
+		if ($data11) {
+			$this->data['data11'] = json_encode($data11);
+		}
+		$this->makeView('/index');
+	}
+
+	function caregivers()
+	{
+		$this->data['title'] = "Caregivers";
+		$this->makeView('/caregivers');
+	}
+
+	// caregivers
+	function addCaregiver()
+	{
+		$this->popupView('/addCaregiver');
+	}
+
+	function archivedCaregiver()
+	{
+		$this->popupView('/archivedCaregiver');
+	}
+
+	function saveCaregiver()
+	{
+		$arr['firstName'] = $this->input->post('firstName');
+		$arr['lastName'] = $this->input->post('lastName');
+		$arr['address'] = $this->input->post('address');
+		$arr['phone'] = $this->input->post('phone');
+		$arr['email'] = $this->input->post('email');
+		$arr['sin'] = $this->input->post('sin');
+		$arr['dateOfBirth'] = date('Y-m-d', strtotime($this->input->post('dateOfBirth')));
+		$arr['hiringDate'] = date('Y-m-d', strtotime($this->input->post('hiringDate')));
+		$arr['baseRate'] = $this->input->post('baseRate');
+		$arr['position'] = $this->input->post('position');
+		$arr['notes'] = $this->input->post('notes');
+		$this->admin->saveCaregivers($arr);
+		$this->session->set_flashdata('success', 'Caregiver Added Successfully.');
+		redirect($_SERVER['HTTP_REFERER']);
+	}
+
+
+	function getCaregivers()
+	{
+		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editCaregiver/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
+            <button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteCaregivers/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$this->datatables->select('id, firstName, lastName, address, phone, email, sin, dateOfBirth, hiringDate, baseRate, position, notes, status, createAt, updateAt');
+		$this->datatables->from(TABLE_CAREGIVERS);
+		$this->datatables->where(array('status' => 0));
+		$this->datatables->addColumn('actions', $action, 'id');
+		$this->datatables->generate();
+	}
+
+	function getArchivedCaregivers()
+	{
+		$this->datatables->select('id, firstName, lastName, address, phone, email, sin, dateOfBirth, hiringDate, baseRate, position, notes, status, createAt, updateAt');
+		$this->datatables->from(TABLE_CAREGIVERS);
+		$this->datatables->where(array('status' => 1));
+		$this->datatables->generate();
+	}
+
+	function editCaregiver($id)
+	{
+		$this->data['data'] = $this->admin->getCaregiversById($id);
+		$this->popupView('/editCaregiver');
+	}
+
+	function updateCaregiver($id)
+	{
+//		return dnp($_POST);
+		$arr['firstName'] = $this->input->post('firstName');
+		$arr['lastName'] = $this->input->post('lastName');
+		$arr['address'] = $this->input->post('address');
+		$arr['phone'] = $this->input->post('phone');
+		$arr['email'] = $this->input->post('email');
+		$arr['sin'] = $this->input->post('sin');
+		$arr['dateOfBirth'] = date('Y-m-d', strtotime($this->input->post('dateOfBirth')));
+		$arr['hiringDate'] = date('Y-m-d', strtotime($this->input->post('hiringDate')));
+		$arr['baseRate'] = $this->input->post('baseRate');
+		$arr['position'] = $this->input->post('position');
+		$arr['notes'] = $this->input->post('notes');
+		$arr['updateAt'] = date('Y-m-d H:i:s');
+		$this->admin->updateCaregivers($arr, $id);
+		$this->session->set_flashdata('success', 'Caregiver Details Update Successfully.');
+		redirect('admin/caregivers');
+	}
+
+	function changeStatus($id)
+	{
+		$arr['status'] = 1;
+		$arr['updateAt'] = date('Y-m-d H:i:s');
+		$this->admin->updateCaregivers($arr, $id);
+		$this->session->set_flashdata('success', 'Caregiver Successfully Archived.');
+		redirect('admin/caregivers');
+	}
+
+	function changeStatusActive($id)
+	{
+		$arr['status'] = 0;
+		$arr['updateAt'] = date('Y-m-d H:i:s');
+		$this->admin->updateCaregivers($arr, $id);
+		$this->session->set_flashdata('success', 'Caregiver Successfully Activated.');
+		redirect('admin/caregivers');
+	}
+
+	function deleteCaregivers($id)
+	{
+// 		$this->admin->deleteCaregivers($id);
+// 		$this->session->set_flashdata('success', 'Caregiver Successfully Removed..');
+        $this->session->set_flashdata('danger', 'Not Permitted!!');
+		redirect('admin/caregivers');
+	}
+
+	// client
+	function clients()
+	{
+		$this->data['title'] = "Clients";
+		$this->makeView('/clients');
+	}
+
+	function addClient()
+	{
+		$this->popupView('/addClient');
+	}
+
+	function saveClient()
+	{
+		$arr['name'] = $this->input->post('name');
+		$arr['address'] = $this->input->post('address');
+		$arr['phone'] = $this->input->post('phone');
+		$arr['dol'] = $this->input->post('dol');
+		$arr['referralSource'] = $this->input->post('referralSource');
+		$arr['budget'] = $this->input->post('budget');
+		$arr['referralDate'] = date('Y-m-d', strtotime($this->input->post('referralDate')));
+		$arr['billingAddress'] = $this->input->post('billingAddress');
+		$arr['companyName'] = $this->input->post('companyName');
+		$arr['adjustorName'] = $this->input->post('adjustorName');
+		$arr['adjustorEmail'] = $this->input->post('adjustorEmail');
+		$arr['adjustorPhone'] = $this->input->post('adjustorPhone');
+		$arr['adjustorFax'] = $this->input->post('adjustorFax');
+		$arr['billRate'] = $this->input->post('billRate');
+		$arr['budgetedHours'] = $this->input->post('budgetedHours');
+		$this->admin->saveClients($arr);
+		$this->session->set_flashdata('success', 'Client Added Successfully.');
+		redirect($_SERVER['HTTP_REFERER']);
+	}
+
+	function getClients()
+	{
+		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
+            <button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteClients/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$this->datatables->select('id, name, address, phone, dol, referralSource, budget, referralDate, billingAddress, companyName, adjustorName, adjustorEmail, 
+		adjustorPhone, adjustorFax, billRate, budgetedHours, status, totalBilled, totalPaid, outstanding, createAt, updateAt');
+		$this->datatables->from(TABLE_CLIENTS);
+		$this->datatables->where(array('status' => 0));
+		$this->datatables->addColumn('actions', $action, 'id');
+		$this->datatables->generate();
+	}
+
+	function archivedClient()
+	{
+		$this->popupView('/archivedClient');
+	}
+
+	function getArchivedClients()
+	{
+
+		$this->datatables->select('id, name, address, phone, dol, referralSource, budget, referralDate, billingAddress, companyName, adjustorName, adjustorEmail, 
+		adjustorPhone, adjustorFax, billRate, budgetedHours, status, totalBilled, totalPaid, outstanding, createAt, updateAt');
+		$this->datatables->from(TABLE_CLIENTS);
+		$this->datatables->where(array('status' => 1));
+		$this->datatables->generate();
+	}
+
+	function editClient($id)
+	{
+		$this->data['data'] = $this->admin->getClientsById($id);
+		$this->popupView('/editClient');
+	}
+
+	function changeClientStatus($id)
+	{
+		$arr['status'] = 1;
+		$arr['updateAt'] = date('Y-m-d H:i:s');
+		$this->admin->updateClients($arr, $id);
+		$this->session->set_flashdata('success', 'Client Successfully Archived.');
+		redirect('admin/clients');
+	}
+
+	function changeClientStatusActive($id)
+	{
+		$arr['status'] = 0;
+		$arr['updateAt'] = date('Y-m-d H:i:s');
+		$this->admin->updateClients($arr, $id);
+		$this->session->set_flashdata('success', 'Client Successfully Activated.');
+		redirect('admin/clients');
+	}
+
+	function updateClient($id)
+	{
+//		return dnp($_POST);
+		$arr['name'] = $this->input->post('name');
+		$arr['address'] = $this->input->post('address');
+		$arr['phone'] = $this->input->post('phone');
+		$arr['dol'] = $this->input->post('dol');
+		$arr['referralSource'] = $this->input->post('referralSource');
+		$arr['budget'] = $this->input->post('budget');
+		$arr['referralDate'] = date('Y-m-d', strtotime($this->input->post('referralDate')));
+		$arr['billingAddress'] = $this->input->post('billingAddress');
+		$arr['companyName'] = $this->input->post('companyName');
+		$arr['adjustorName'] = $this->input->post('adjustorName');
+		$arr['adjustorEmail'] = $this->input->post('adjustorEmail');
+		$arr['adjustorPhone'] = $this->input->post('adjustorPhone');
+		$arr['adjustorFax'] = $this->input->post('adjustorFax');
+		$arr['billRate'] = $this->input->post('billRate');
+		$arr['budgetedHours'] = $this->input->post('budgetedHours');
+		$arr['updateAt'] = date('Y-m-d H:i:s');
+		$this->admin->updateClients($arr, $id);
+		$this->session->set_flashdata('success', 'Client Details Update Successfully.');
+		redirect('admin/clients');
+	}
+
+	function deleteClients($id)
+	{
+// 		$this->admin->deleteClients($id);
+// 		$this->session->set_flashdata('success', 'Client Successfully Removed..');
+        $this->session->set_flashdata('danger', 'Not Permitted!!');
+		redirect('admin/clients');
+	}
+
+	function services()
+	{
+		$this->data['title'] = "Services";
+		$this->makeView('/services');
+	}
+
+	function addService()
+	{
+		$this->data['caregivers'] = $this->admin->getCaregivers();
+		$this->data['clients'] = $this->admin->getClients();
+		$this->popupView('/addService');
+	}
+
+	function addServiceFromCalendar($clientId, $date)
+	{
+		$this->data['client'] = $this->admin->getClientsById($clientId);
+		$this->data['date'] = $date;
+		$this->data['caregivers'] = $this->admin->getCaregivers();
+		$this->data['clients'] = $this->admin->getClients();
+		$this->popupView('/addServiceFromCalendar');
+	}
+
+	function getScheduledHoursThisMonth($clientId)
+	{
+		echo $this->admin->getScheduledHoursThisMonth($clientId) ? $this->admin->getScheduledHoursThisMonth($clientId)->totalHours : 0;
+	}
+
+	function getScheduledHoursOtherMonth($clientId, $month, $year)
+	{
+		echo $this->admin->getScheduledHoursOtherMonth($clientId, $month, $year) ? $this->admin->getScheduledHoursOtherMonth($clientId, $month, $year)->totalHours : 0;
+	}
+
+	function saveService()
+	{
+//		return dnp($_POST);
+		$date_arr = explode(", ", $this->input->post('date'));
+		for ($i = 0; $i < count($date_arr); $i++) {
+			$arr['date'] = date('Y-m-d', strtotime($date_arr[$i]));
+			$arr['startTime'] = $this->input->post('startTime');
+			$arr['endTime'] = $this->input->post('endTime');
+			$arr['caregiverId'] = $this->input->post('caregiverId');
+			$clientId = $arr['clientId'] = $this->input->post('clientId');
+			$arr['serviceType'] = $this->input->post('serviceType');
+			$arr['rate'] = $this->input->post('rate');
+			$arr['billRate'] = $this->input->post('billRate');
+			$arr['hours'] = $this->input->post('hours');
+			$arr['amount'] = $this->input->post('amount');
+			$arr['comments'] = $this->input->post('comments');
+			$billAmount = $arr['billAmount'] = $this->input->post('billAmount');
+			$this->admin->saveService($arr);
+			$client = $this->admin->getClientsById($clientId);
+			$cl['totalBilled'] = $client->totalBilled + $billAmount;
+			$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
+			$this->admin->updateClients($cl, $clientId);
+		}
+		$this->session->set_flashdata('success', 'Service Added Successfully.');
+		redirect($_SERVER['HTTP_REFERER']);
+	}
+
+	function saveServiceFromCalendar()
+	{
+		$arr['date'] = date('Y-m-d', strtotime($this->input->post('date')));
+		$arr['startTime'] = $this->input->post('startTime');
+		$arr['endTime'] = $this->input->post('endTime');
+		$arr['caregiverId'] = $this->input->post('caregiverId');
+		$clientId = $arr['clientId'] = $this->input->post('clientId');
+		$arr['serviceType'] = $this->input->post('serviceType');
+		$arr['rate'] = $this->input->post('rate');
+		$arr['billRate'] = $this->input->post('billRate');
+		$arr['hours'] = $this->input->post('hours');
+		$arr['amount'] = $this->input->post('amount');
+		$arr['comments'] = $this->input->post('comments');
+		$billAmount = $arr['billAmount'] = $this->input->post('billAmount');
+		$eventId = $this->admin->saveService($arr);
+		$client = $this->admin->getClientsById($clientId);
+		$cl['totalBilled'] = $client->totalBilled + $billAmount;
+		$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
+		$this->admin->updateClients($cl, $clientId);
+
+		$eventData = array(
+			'id' => $eventId,
+			'date' => $arr['date'],
+			'startTime' => $arr['startTime'],
+			'endTime' => $arr['endTime'],
+			'caregiverId' => $arr['caregiverId'],
+			'clientId' => $arr['clientId'],
+			'rate' => $arr['rate'],
+			'hours' => $arr['hours'],
+			'amount' => $arr['amount']
+		);
+
+		echo json_encode($eventData);
+	}
+
+	function editService($id)
+	{
+		$this->data['caregivers'] = $this->admin->getCaregivers();
+		$this->data['clients'] = $this->admin->getClients();
+		$this->data['data'] = $this->admin->getServiceById($id);
+		$this->popupView('/editService');
+	}
+
+	function editServiceCalendar($id)
+	{
+		$this->data['caregivers'] = $this->admin->getCaregivers();
+		$this->data['clients'] = $this->admin->getClients();
+		$this->data['data'] = $this->admin->getServiceById($id);
+		$this->popupView('/editServiceCalendar');
+	}
+
+	function getServices()
+	{
+		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
+            <button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
+		$this->datatables->from(TABLE_SERVICES . ' as s');
+		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
+		$this->datatables->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
+		$this->datatables->join(TABLE_INVOICES . ' as i', 's.invoiceId = i.id', 'left');
+		$this->datatables->where(array('c.status' => 0, 'cl.status' => 0));
+		$this->datatables->addColumn('actions', $action, 'id');
+		$this->datatables->generate();
+	}
+
+	function getServicesCustom($startDate, $endDate)
+	{
+		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
+            <button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
+		$this->datatables->from(TABLE_SERVICES . ' as s');
+		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
+		$this->datatables->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
+		$this->datatables->join(TABLE_INVOICES . ' as i', 's.invoiceId = i.id', 'left');
+		$this->datatables->where(array('s.date >=' => $startDate));
+		$this->datatables->where(array('s.date <=' => $endDate));
+		$this->datatables->where(array('c.status' => 0, 'cl.status' => 0));
+		$this->datatables->addColumn('actions', $action, 'id');
+		$this->datatables->generate();
+	}
+
+	function updateService($id)
+	{
+//		return dnp($_POST);
+		if ($this->input->post('copyDate')) {
+			$date_arr = explode(", ", $this->input->post('copyDate'));
+			for ($i = 0; $i < count($date_arr); $i++) {
+				$arr['date'] = date('Y-m-d', strtotime($date_arr[$i]));
+				$arr['startTime'] = $this->input->post('startTime');
+				$arr['endTime'] = $this->input->post('endTime');
+				$arr['caregiverId'] = $this->input->post('caregiverId');
+				$clientId = $arr['clientId'] = $this->input->post('clientId');
+				$arr['serviceType'] = $this->input->post('serviceType');
+				$arr['rate'] = $this->input->post('rate');
+				$arr['billRate'] = $this->input->post('billRate');
+				$arr['hours'] = $this->input->post('hours');
+				$arr['amount'] = $this->input->post('amount');
+				$arr['comments'] = $this->input->post('comments');
+				$billAmount = $arr['billAmount'] = $this->input->post('billAmount');
+				$existingService = $this->admin->getServiceByData(
+					$clientId,
+					$arr['caregiverId'],
+					$arr['serviceType'],
+					$arr['startTime'],
+					$arr['endTime'],
+					$arr['date']
+				);
+				if (!$existingService) {
+					$this->admin->saveService($arr);
+				}
+				$client = $this->admin->getClientsById($clientId);
+				$cl['totalBilled'] = $client->totalBilled + $billAmount;
+				$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
+				$this->admin->updateClients($cl, $clientId);
+			}
+		}
+		$arrr['date'] = date('Y-m-d', strtotime($this->input->post('date')));
+		$arrr['startTime'] = $this->input->post('startTime');
+		$arrr['endTime'] = $this->input->post('endTime');
+		$arrr['caregiverId'] = $this->input->post('caregiverId');
+		$clientId = $arrr['clientId'] = $this->input->post('clientId');
+		$arrr['serviceType'] = $this->input->post('serviceType');
+		$arrr['rate'] = $this->input->post('rate');
+		$arrr['billRate'] = $this->input->post('billRate');
+		$arrr['hours'] = $this->input->post('hours');
+		$arrr['amount'] = $this->input->post('amount');
+		$arrr['comments'] = $this->input->post('comments');
+		$billAmount = $arrr['billAmount'] = $this->input->post('billAmount');
+		$oldBillAmount = $this->input->post('oldBillAmount');
+		$arrr['updateAt'] = date('Y-m-d H:i:s');
+		$this->admin->updateService($arrr, $id);
+		$client = $this->admin->getClientsById($clientId);
+		$cl['totalBilled'] = $client->totalBilled + $billAmount - $oldBillAmount;
+		$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
+		$this->admin->updateClients($cl, $clientId);
+		$this->session->set_flashdata('success', 'Service Update Successfully.');
+		redirect($_SERVER['HTTP_REFERER']);
+	}
+
+	function updateServiceCalendar($id)
+	{
+//		return dnp($_POST);
+		$arr['date'] = date('Y-m-d', strtotime($this->input->post('date')));
+		$arr['startTime'] = $this->input->post('startTime');
+		$arr['endTime'] = $this->input->post('endTime');
+		$arr['caregiverId'] = $this->input->post('caregiverId');
+		$clientId = $arr['clientId'] = $this->input->post('clientId');
+		$oldClientId = $this->input->post('oldClientId');
+		$arr['serviceType'] = $this->input->post('serviceType');
+		$arr['rate'] = $this->input->post('rate');
+		$arr['billRate'] = $this->input->post('billRate');
+		$arr['hours'] = $this->input->post('hours');
+		$arr['amount'] = $this->input->post('amount');
+		$arr['comments'] = $this->input->post('comments');
+		$billAmount = $arr['billAmount'] = $this->input->post('billAmount');
+		$oldBillAmount = $this->input->post('oldBillAmount');
+		$arr['updateAt'] = date('Y-m-d H:i:s');
+		$this->admin->updateService($arr, $id);
+		$client = $this->admin->getClientsById($clientId);
+		$cl['totalBilled'] = $client->totalBilled + $billAmount - $oldBillAmount;
+		$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
+		$this->admin->updateClients($cl, $clientId);
+
+		$eventData = array(
+			'id' => $id,
+			'date' => $arr['date'],
+			'startTime' => $arr['startTime'],
+			'endTime' => $arr['endTime'],
+			'caregiverId' => $arr['caregiverId'],
+			'clientId' => $arr['clientId'],
+			'oldClientId' => $oldClientId,
+			'rate' => $arr['rate'],
+			'hours' => $arr['hours'],
+			'amount' => $arr['amount']
+		);
+		echo json_encode($eventData);
+	}
+
+	public function copyServiceToNextMonth()
+	{
+		$clientId = $this->input->post('clientId');
+
+		$currentMonthStart = date('Y-m-01');
+		$currentMonthEnd = date('Y-m-t');
+
+		// Fetch current month's data
+		$currentMonthData = $this->admin->getServicesByDateRange($currentMonthStart, $currentMonthEnd, $clientId);
+
+//		return dnp($currentMonthData);
+		if (!empty($currentMonthData)) {
+			foreach ($currentMonthData as $data) {
+				// Adjust the date to the next month
+				$originalDate = strtotime($data->date);
+				$newDate = strtotime('+1 month', $originalDate);
+
+				// Check if the new date is valid
+				if (date('m', $originalDate) == date('m', $newDate)) {
+					// Invalid date (e.g., moving from 31st to a month with fewer days)
+					$newDate = strtotime('last day of next month', $originalDate);
+				}
+
+				$formattedNewDate = date('Y-m-d', $newDate);
+
+				$exists = $this->admin->checkServiceExists($data->caregiverId, $data->serviceType, $formattedNewDate, $data->startTime, $data->endTime);
+
+				if (!$exists) {
+					// Prepare new data for insertion
+					$newData = [
+						'date' => $formattedNewDate,
+						'startTime' => $data->startTime,
+						'endTime' => $data->endTime,
+						'caregiverId' => $data->caregiverId,
+						'clientId' => $data->clientId,
+						'serviceType' => $data->serviceType,
+						'rate' => $data->rate,
+						'billRate' => $data->billRate,
+						'hours' => $data->hours,
+						'amount' => $data->amount,
+						'billAmount' => $data->billAmount,
+					];
+					$this->admin->saveService($newData);
+				}
+			}
+			$response = ['status' => 'success', 'message' => 'Data copied to next month successfully.'];
+		} else {
+			$response = ['status' => 'error', 'message' => 'No data to copy.'];
+		}
+
+		echo json_encode($response);
+	}
+
+	function deleteService($id)
+	{
+// 		$this->admin->deleteService($id);
+// 		$this->session->set_flashdata('success', 'Service Successfully Removed..');
+        $this->session->set_flashdata('danger', 'Not Permitted!!');
+		redirect('admin/services');
+	}
+
+	function calendar()
+	{
+		$this->data['title'] = "Service Calendar";
+		$this->data['clients'] = $this->admin->getClients();
+		$this->makeView('/calendar');
+	}
+
+	function getAllService($clientId)
+	{
+		echo json_encode($this->admin->getAllService($clientId));
+	}
+
+	function caregiverWeekly()
+	{
+		$this->data['title'] = "Caregiver Weekly Total Hours";
+		$this->data['caregivers'] = $this->admin->getCaregivers();
+		$this->data['clients'] = $this->admin->getClients();
+		$this->makeView('/caregiverWeekly');
+	}
+
+	function getCaregiverWeekly()
+	{
+		$startDate = date('Y-m-d', strtotime($this->input->post('startDate')));
+		$endDate = date('Y-m-d', strtotime($this->input->post('endDate')));
+		$this->data['data'] = $this->admin->getCaregiverWeekly($startDate, $endDate);
+		echo json_encode($this->admin->getCaregiverWeekly($startDate, $endDate));
+	}
+
+	function invoice()
+	{
+		$this->data['title'] = "Monthly Invoice";
+		$this->data['years'] = $this->admin->getYearsList();
+		$this->makeView('/invoice');
+	}
+
+	function getInvoice()
+	{
+		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
+		<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info">Print</a>';
+		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
+		$this->datatables->from(TABLE_INVOICES . ' as i');
+		$this->datatables->join(TABLE_CLIENTS . ' as cl', 'i.clientId = cl.id');
+		$this->datatables->addColumn('actions', $action, 'id');
+		$this->datatables->generate();
+	}
+
+	function getCustomInvoice($month, $year)
+	{
+		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
+		<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info">Print</a>';
+		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
+		$this->datatables->from(TABLE_INVOICES . ' as i');
+		$this->datatables->join(TABLE_CLIENTS . ' as cl', 'i.clientId = cl.id');
+		if ($month != 'All') {
+			$this->datatables->where(array('MONTH(i.invoiceDate)' => $month));
+		}
+		$this->datatables->where(array('YEAR(i.invoiceDate)' => $year));
+		$this->datatables->addColumn('actions', $action, 'id');
+		$this->datatables->generate();
+	}
+
+	function editInvoice($invoiceId)
+	{
+		$this->data['data'] = $this->admin->getInvoiceById($invoiceId);
+		$this->data['services'] = $this->admin->getServiceByInvoiceId($invoiceId);
+		$this->popupView('/editInvoice');
+	}
+
+	function printInvoice($invoiceId)
+	{
+		$this->data['data'] = $this->admin->getInvoiceById($invoiceId);
+		$this->data['services'] = $this->admin->getServiceByInvoiceId($invoiceId);
+		$this->popupView('/printInvoice');
+	}
+
+	function payInvoice($invoiceId)
+	{
+		$this->data['data'] = $this->admin->getInvoiceById($invoiceId);
+		$this->popupView('/payInvoice');
+	}
+
+	function savePay($id)
+	{
+//		return dnp($_POST);
+		$arr['title'] = $this->input->post('title');
+		$arr['poNumber'] = $this->input->post('poNumber');
+		$arr['taxPercentage'] = $this->input->post('taxPercentage');
+		$arr['taxAmount'] = $this->input->post('taxAmount');
+		$arr['invoiceDate'] = date('Y-m-d', strtotime($this->input->post('invoiceDate')));
+		$arr['dueDate'] = date('Y-m-d', strtotime($this->input->post('dueDate')));
+		$clientId = $this->input->post('clientId');
+		$total = $arr['total'] = $this->input->post('total');
+		$paidAmount = $this->input->post('paidAmount') ? $this->input->post('paidAmount') : 0;
+		$invoice = $this->admin->getInvoiceById($id);
+		$arr['paidAmount'] = $invoice->paidAmount + $paidAmount;
+		$arr['dueAmount'] = number_format(($total - $arr['paidAmount']), 2);
+		if ($total == $arr['paidAmount']) {
+			$arr['status'] = 'Fully Paid';
+		}
+		if ($total > $arr['paidAmount'] && $arr['paidAmount'] != 0) {
+			$arr['status'] = 'Partial Paid';
+		}
+		$ar['updateAt'] = $arr['updateAt'] = date('Y-m-d H:i:s');
+		$client = $this->admin->getClientsById($clientId);
+		$ar['totalPaid'] = $client->totalPaid + $paidAmount;
+		$ar['outstanding'] = $client->totalBilled - $ar['totalPaid'];
+//		return dnp($aer);
+		$this->admin->updateInvoice($arr, $id);
+		$this->admin->updateClients($ar, $clientId);
+		$this->session->set_flashdata('success', 'Invoice Paid Successfully.');
+		redirect($_SERVER['HTTP_REFERER']);
+	}
+
+	function generateInvoice()
+	{
+		$this->data['title'] = 'Generate Invoice';
+		$this->makeView('/generateInvoice');
+	}
+
+	function getServicesInvoice()
+	{
+		$this->datatables->select('s.id, i.invoiceNumber, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.updateAt');
+		$this->datatables->from(TABLE_SERVICES . ' as s');
+		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
+		$this->datatables->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
+		$this->datatables->join(TABLE_INVOICES . ' as i', 's.invoiceId = i.id', 'left');
+		$this->datatables->where(array('c.status' => 0, 'cl.status' => 0));
+		$this->datatables->generate();
+	}
+
+	function getServicesCustomInvoice($startDate, $endDate)
+	{
+		$this->datatables->select('s.id as id, i.invoiceNumber, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.updateAt');
+		$this->datatables->from(TABLE_SERVICES . ' as s');
+		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
+		$this->datatables->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
+		$this->datatables->join(TABLE_INVOICES . ' as i', 's.invoiceId = i.id', 'left');
+		$this->datatables->where(array('s.date >=' => $startDate));
+		$this->datatables->where(array('s.date <=' => $endDate));
+		$this->datatables->where(array('c.status' => 0, 'cl.status' => 0));
+		$this->datatables->generate();
+	}
+
+	function generate_invoice()
+	{
+		$this->data['selectedRows'] = $this->input->post('selectedRows');
+		$service = $this->admin->getServiceById($this->input->post('selectedRows')[0]['id']);
+		$totalAmount = 0;
+		$totalHours = 0;
+		for ($i = 0; $i < count($this->input->post('selectedRows')); $i++) {
+			$totalAmount += $this->input->post('selectedRows')[$i]['billAmount'];
+			$totalHours += $this->input->post('selectedRows')[$i]['hours'];
+		}
+		$this->data['totalAmount'] = $totalAmount;
+		$this->data['totalHours'] = $totalHours;
+		$this->data['client'] = $this->admin->getClientsById($service->clientId);
+		$this->load->view('admin/generate_invoice', $this->data);
+	}
+
+	function saveGenerateInvoice()
+	{
+//		return dnp($_POST);
+		$arr['title'] = $this->input->post('title');
+		$clientId = $arr['clientId'] = $this->input->post('clientId');
+		$arr['poNumber'] = $this->input->post('poNumber');
+		$invouceNumber = $arr['invoiceNumber'] = $this->input->post('invoiceNumber');
+		$arr['invoiceDate'] = date('Y-m-d', strtotime($this->input->post('invoiceDate')));
+		$arr['dueDate'] = date('Y-m-d', strtotime($this->input->post('dueDate')));
+		$arr['totalAmount'] = $this->input->post('totalAmount');
+		$arr['totalHours'] = $this->input->post('totalHours');
+		$arr['taxPercentage'] = $this->input->post('taxPercentage');
+		$arr['taxAmount'] = $this->input->post('taxAmount');
+		$arr['total'] = $this->input->post('total');
+		$paidAmount = $arr['paidAmount'] = $this->input->post('paidAmount') ? $this->input->post('paidAmount') : 0;
+		$arr['dueAmount'] = $arr['total'] - $paidAmount;
+		if ($arr['total'] == $arr['paidAmount']) {
+			$arr['status'] = 'Fully Paid';
+		} elseif ($arr['paidAmount'] > 0 && $arr['total'] > $arr['paidAmount']) {
+			$arr['status'] = 'Partial Paid';
+		} else {
+			$arr['status'] = 'Sent';
+		}
+		$this->admin->saveInvoice($arr);
+		$invouceId = $this->db->insert_id();
+		for ($i = 0; $i < count($this->input->post('serviceId')); $i++) {
+			$ar['invoiceId'] = $invouceId;
+			$this->admin->updateService($ar, $this->input->post('serviceId')[$i]);
+		}
+		$client = $this->admin->getClientsById($clientId);
+		$arrr['totalPaid'] = $client->totalPaid + $paidAmount;
+		$arrr['outstanding'] = $client->totalBilled - $arrr['totalPaid'];
+		$this->admin->updateClients($arrr, $client->id);
+		$this->session->set_flashdata('success', 'Invoice Generated Successfully.');
+		redirect($_SERVER['HTTP_REFERER']);
+	}
+
+}
