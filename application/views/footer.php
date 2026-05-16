@@ -69,7 +69,7 @@
 	});
 	<?php }else if($this->session->flashdata('danger')){  ?>
 	Toast.fire({
-		icon: "danger",
+		icon: "error",
 		title: "<?php echo $this->session->flashdata('danger'); ?>"
 	});
 	<?php }else if($this->session->flashdata('warning')){  ?>

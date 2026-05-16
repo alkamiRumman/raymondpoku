@@ -34,16 +34,16 @@ class Site extends MY_Controller
 					$this->session->set_flashdata('success', 'Login Succeed!');
 					$this->ifLogin();
 				} else {
-					$this->session->set_flashdata('error', 'Your package already expired!');
-					redirect($this->index());
+					$this->session->set_flashdata('danger', 'Your package already expired!');
+					redirect('site/index');
 				}
 			} else {
-				$this->session->set_flashdata('error', 'Wrong Username or Password..');
-				redirect($this->index());
+				$this->session->set_flashdata('danger', 'Wrong Username or Password..');
+				redirect('site/index');
 			}
 		} else {
-			$this->session->set_flashdata('error', 'User not exists!');
-			redirect($this->index());
+			$this->session->set_flashdata('danger', 'User not exists!');
+			redirect('site/index');
 		}
 	}
 
@@ -118,7 +118,7 @@ class Site extends MY_Controller
 			redirect($this->index());
 		} catch (Exception $e) {
 			// Handle errors
-			$this->session->set_flashdata('error', $e->getMessage());
+			$this->session->set_flashdata('danger', $e->getMessage());
 			redirect($this->index());
 		}
 

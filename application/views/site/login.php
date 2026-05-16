@@ -2,101 +2,201 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<meta name="description" content="<?= COMPANY ?>">
-	<meta name="author" content="Raymondpoku">
-	<meta name="keywords" content="<?= COMPANY ?>">
 	<title><?= SHORTNAME ?> | Login</title>
 
-	<!-- Fonts -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-	<!-- End fonts -->
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-	<!-- core:css -->
 	<link rel="stylesheet" href="<?= base_url('assets/vendors/core/core.css') ?>">
-	<!-- endinject -->
-
-	<!-- inject:css -->
 	<link rel="stylesheet" href="<?= base_url('assets/fonts/feather-font/css/iconfont.css') ?>">
-	<link rel="stylesheet" href="<?= base_url('assets/vendors/flag-icon-css/css/flag-icon.min.css') ?>">
-	<!-- endinject -->
-
-	<!-- Layout styles -->
 	<link rel="stylesheet" href="<?= base_url('assets/css/demo1/style.css') ?>">
-	<!-- End layout styles -->
 
-	<link rel="shortcut icon" href="<?= base_url('assets/images/favicon.png') ?>"/>
+	<link rel="shortcut icon" href="<?= base_url('assets/images/favicon.png') ?>">
+
+	<style>
+		body {
+			font-family: 'Roboto', sans-serif;
+			background: #f8fafc;
+		}
+
+		.auth-wrapper {
+			min-height: 100vh;
+		}
+
+		.auth-left {
+			background: linear-gradient(135deg, #6571ff, #4f46e5);
+			color: white;
+			padding: 60px;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			border-radius: 20px 0 0 20px;
+		}
+
+		.auth-left h1 {
+			font-size: 42px;
+			font-weight: 700;
+			margin-bottom: 20px;
+		}
+
+		.auth-left p {
+			font-size: 16px;
+			opacity: .9;
+		}
+
+		.auth-right {
+			background: white;
+			padding: 50px;
+			border-radius: 0 20px 20px 0;
+			box-shadow: 0 10px 35px rgba(0,0,0,.08);
+		}
+
+		.login-card {
+			max-width: 1050px;
+			margin: auto;
+		}
+
+		.form-control {
+			height: 48px;
+			border-radius: 10px;
+		}
+
+		.btn-login {
+			height: 48px;
+			border-radius: 10px;
+			font-weight: 600;
+		}
+
+		.demo-user {
+			cursor: pointer;
+			transition: .2s;
+		}
+
+		.demo-user:hover {
+			background: #f1f5f9;
+		}
+
+		.password-wrapper {
+			position: relative;
+		}
+
+		.password-toggle {
+			position: absolute;
+			top: 50%;
+			right: 15px;
+			transform: translateY(-50%);
+			cursor: pointer;
+			color: #6b7280;
+		}
+
+		@media (max-width: 991px) {
+			.auth-left {
+				display: none;
+			}
+
+			.auth-right {
+				border-radius: 20px;
+				padding: 35px 25px;
+			}
+		}
+	</style>
 </head>
 <body>
-<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
-    <div class="row w-100 justify-content-center">
-        <div class="col-sm-10 col-md-8 col-lg-6 col-xl-5">
-            <div class="card shadow-sm">
-                <div class="card-body p-4 p-md-5">
 
-                    <a class="noble-ui-logo d-block mb-3 fs-3 fw-bold text-center">
-                        <?= COMPANY ?>
-                    </a>
+<div class="container auth-wrapper d-flex align-items-center">
+	<div class="row w-100 justify-content-center login-card">
 
-                    <h5 class="text-muted fw-normal mb-4 text-center">
-                        Welcome back! Log in to your account.
-                    </h5>
+		<!-- Left -->
+		<div class="col-lg-6 d-none d-lg-block p-0">
+			<div class="auth-left h-100">
+				<img src="<?= base_url('assets/images/logo.png') ?>" width="90" class="mb-4 rounded-3">
+				<h1><?= COMPANY ?></h1>
+				<p>
+					Manage your business smarter with our secure dashboard platform.
+				</p>
+			</div>
+		</div>
 
-                    <form method="post" action="<?= login_url('verify') ?>">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Email address</label>
-                            <input type="email" class="form-control" id="username" name="username" placeholder="Email">
-                        </div>
+		<!-- Right -->
+		<div class="col-lg-6 p-0">
+			<div class="auth-right">
 
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" name="password" id="password" autocomplete="current-password"
-                                   class="form-control" placeholder="Password">
-                        </div>
+				<div class="text-center mb-4">
+					<h3 class="fw-bold">Welcome Back</h3>
+					<p class="text-muted">Login to continue</p>
+				</div>
 
-                        <button type="submit" class="btn btn-primary w-100 text-white">Login</button>
-                    </form>
+				<form method="post" action="<?= login_url('verify') ?>">
 
-                    <div class="table-responsive mt-4">
-                        <table class="table table-bordered mb-0">
-                            <tr id="admin">
-                                <td>admin@admin.com</td>
-                                <td>123</td>
-                                <td>Admin</td>
-                            </tr>
-                        </table>
-                    </div>
+					<div class="mb-3">
+						<label>Email</label>
+						<input type="email"
+							   id="username"
+							   name="username"
+							   class="form-control"
+							   placeholder="admin@example.com"
+							   required>
+					</div>
 
-                </div>
-            </div>
-        </div>
-    </div>
+					<div class="mb-4">
+						<label>Password</label>
+						<div class="password-wrapper">
+							<input type="password"
+								   id="password"
+								   name="password"
+								   class="form-control"
+								   placeholder="••••••••"
+								   required>
+							<i data-feather="eye" class="password-toggle" id="togglePassword"></i>
+						</div>
+					</div>
+
+					<button class="btn btn-primary w-100 btn-login">
+						Login
+					</button>
+				</form>
+
+				<hr class="my-4">
+
+				<p class="text-muted small mb-2">Quick Demo Login</p>
+
+				<table class="table table-bordered">
+					<tr class="demo-user" id="admin">
+						<td>admin@admin.com</td>
+						<td>123</td>
+						<td>Admin</td>
+					</tr>
+				</table>
+
+			</div>
+		</div>
+
+	</div>
 </div>
 
-
-<!-- core:js -->
 <script src="<?= base_url('assets/vendors/core/core.js') ?>"></script>
-<!-- endinject -->
-
-<!-- Plugin js for this page -->
-<!-- End plugin js for this page -->
-
-<!-- inject:js -->
 <script src="<?= base_url('assets/vendors/feather-icons/feather.min.js') ?>"></script>
 <script src="<?= base_url('assets/js/template.js') ?>"></script>
-<!-- endinject -->
+<script src="<?= base_url('assets/vendors/sweetalert2/sweetalert2.min.js') ?>"></script>
+<script src="<?= base_url('assets/js/sweet-alert.js') ?>"></script>
+
 <script>
-	$('#admin').on('click', function () {
+	feather.replace();
+
+	$('#admin').click(function () {
 		$('#username').val('admin@admin.com');
 		$('#password').val('123');
-	})
-	$('#auditor').on('click', function () {
-		$('#username').val('rumman@admin.com');
-		$('#password').val('123');
-	})
+	});
+
+	$('#togglePassword').click(function () {
+		let input = $('#password');
+		let type = input.attr('type') === 'password' ? 'text' : 'password';
+		input.attr('type', type);
+	});
 
 	const Toast = Swal.mixin({
 		toast: true,
@@ -114,10 +214,10 @@
 		icon: "success",
 		title: "<?php echo $this->session->flashdata('success'); ?>"
 	});
-	<?php }else if($this->session->flashdata('error')){  ?>
+	<?php }else if($this->session->flashdata('danger')){  ?>
 	Toast.fire({
 		icon: "error",
-		title: "<?php echo $this->session->flashdata('error'); ?>"
+		title: "<?php echo $this->session->flashdata('danger'); ?>"
 	});
 	<?php }else if($this->session->flashdata('warning')){  ?>
 	Toast.fire({
@@ -131,7 +231,6 @@
 	});
 	<?php } ?>
 </script>
-<!-- Custom js for this page -->
-<!-- End custom js for this page -->
+
 </body>
 </html>
