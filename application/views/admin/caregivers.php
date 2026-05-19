@@ -79,7 +79,7 @@
 				{
 					"render": function (data, type, row) {
 						return '<a onclick="showSwal(\'passing-parameter-execute-archive\', \'' + '<?php echo base_url('admin/changeStatus/'); ?>' + row['id'] + '\')">' +
-							'<button class="btn btn-xs btn-warning text-white">Archived</button></a>';
+							'<button class="btn btn-xs btn-success text-white">Active</button></a>';
 					},
 					"targets": 12
 				}

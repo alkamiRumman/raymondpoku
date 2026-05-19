@@ -1,5 +1,5 @@
 <div class="modal" id="modal-default" style="display: block;overflow: auto;">
-	<div class="modal-dialog modal-xl">
+	<div class="modal-dialog modal-fullscreen">
 		<div class="modal-content">
 			<div class="modal-header">
 				<h4 class="modal-title"><b>Archived Caregivers</b></h4>
@@ -75,7 +75,7 @@
 				{
 					"render": function (data, type, row) {
 						return '<a onclick="showSwal(\'passing-parameter-execute-active\', \'' + '<?php echo base_url('admin/changeStatusActive/'); ?>' + row['id'] + '\')">' +
-							'<button class="btn btn-xs btn-success text-white">Active</button></a>';
+							'<button class="btn btn-xs btn-warning text-white">Archived</button></a>';
 					}, "targets": 12
 				}
 			],
