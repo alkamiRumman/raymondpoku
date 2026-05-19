@@ -29,33 +29,32 @@
 				</div>
 				<div class="row">
 					<div class="col-md-12 text-center mb-3">
-						<button type="button" id="search" class="btn btn-sm btn-info">Search</button>
+						<button type="button" id="search" class="btn btn-sm btn-info me-2">Search</button>
+						<button type="button" id="clearSearch" class="btn btn-sm btn-outline-secondary">Clear</button>
 					</div>
 				</div>
-				<div class="table-responsive">
-					<table id="dataTable" class="table">
-						<thead class="bg-info">
-						<tr>
-							<th class="text-dark">Date</th>
-							<th class="text-dark">Invoice Number</th>
-							<th class="text-dark">Time</th>
-							<th class="text-dark">Caregiver</th>
-							<th class="text-dark">Client</th>
-							<th class="text-dark">Service Type</th>
-							<th class="text-dark">Employee Rate</th>
-							<th class="text-dark">Bill Rate</th>
-							<th class="text-dark">Hours</th>
-							<th class="text-dark">Amount</th>
-							<th class="text-dark">Bill Amount</th>
-							<th class="text-dark">Comments</th>
-							<th class="text-dark">Last Update</th>
-							<th class="text-dark">Actions</th>
-						</tr>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
+				<table id="dataTable" class="table" style="width:100%!important">
+					<thead class="bg-info">
+					<tr>
+						<th class="text-dark">Actions</th>
+						<th class="text-dark">Date</th>
+						<th class="text-dark">Invoice Number</th>
+						<th class="text-dark">Time</th>
+						<th class="text-dark">Caregiver</th>
+						<th class="text-dark">Client</th>
+						<th class="text-dark">Service Type</th>
+						<th class="text-dark">Employee Rate</th>
+						<th class="text-dark">Bill Rate</th>
+						<th class="text-dark">Hours</th>
+						<th class="text-dark">Amount</th>
+						<th class="text-dark">Bill Amount</th>
+						<th class="text-dark">Comments</th>
+						<th class="text-dark">Last Update</th>
+					</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
@@ -82,6 +81,127 @@
 			return formattedDate;
 		}
 
+		function makeColumnDefs() {
+			return [
+				{orderable: false, targets: [0, 4, 5]},
+				{
+					"render": function (data, type, row) {
+						return moment(data).format('DD MMM YYYY');
+					}, "targets": 1, type: 'date'
+				},
+				{
+					"render": function (data, type, row) {
+						return data + ' - ' + row['endTime'];
+					}, "targets": 3,
+				},
+				{
+					"render": function (data, type, row) {
+						return data + ' ' + row['lastName'];
+					}, "targets": 4,
+				},
+				{
+					"render": function (data, type, row) {
+						if (data == 0)
+							return data;
+						else
+							return '$' + data + '</span>';
+					}, "targets": [7, 8, 10, 11]
+				},
+				{
+					"render": function (data, type, row) {
+						if (data) {
+							return moment(data).format('DD MMM YYYY hh:mm:ss A');
+						} else {
+							return '--';
+						}
+					}, "targets": 13, type: 'date'
+				}
+			];
+		}
+
+		function makeAoColumns() {
+			return [
+				{mData: "actions", bSortable: false},
+				{mData: "date"}, {mData: "invoiceNumber"}, {mData: "startTime"}, {mData: "firstName"}, {mData: "name"},
+				{mData: "serviceType"}, {mData: "rate"}, {mData: "billRate"}, {mData: "hours"},
+				{mData: "amount"}, {mData: "billAmount"}, {mData: "comments"}, {mData: "updateAt"}
+			];
+		}
+
+		function makeTableOptions(ajaxSource) {
+			return {
+				serverSide: true,
+				order: [[1, "DESC"]],
+				stateSave: true,
+				scrollX: true,
+				scrollY: '65vh',
+				scrollCollapse: true,
+				fixedColumns: { leftColumns: 2 },
+				initComplete: function () {
+					var state = Table.state.loaded();
+					Table.columns().every(function (index) {
+						var col = this;
+						var title = $('#dataTable thead th').eq(index).text();
+						var header = $(col.header());
+
+						if ([4, 5].includes(index)) {
+							header.html(title + '<br><input type="text" placeholder="Search here..." />');
+							var input = $('input', header);
+
+							input.on('keyup change', function () {
+								col.search(this.value).draw();
+							});
+
+							if (state) {
+								var colSearch = state.columns[index].search.search;
+								if (colSearch) {
+									input.val(colSearch);
+								}
+							}
+						} else {
+							header.text(title);
+						}
+					});
+				},
+				"columnDefs": makeColumnDefs(),
+				'aoColumns': makeAoColumns(),
+				"aLengthMenu": [[15, 25, 50, 100, 200, -1], [15, 25, 50, 100, 200, 'All']],
+				"iDisplayLength": 15,
+				'bProcessing': true,
+				"language": {
+					processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>'
+				},
+				'bServerSide': true,
+				'sAjaxSource': ajaxSource,
+				'fnServerData': function (sSource, aoData, fnCallback) {
+					$.ajax({
+						'dataType': 'json',
+						'type': 'POST',
+						'url': sSource,
+						'data': aoData,
+						'success': function (d, e, f) {
+							console.log(d);
+							fnCallback(d, e, f);
+						},
+						error: function (jqXHR, textStatus, errorThrown) {
+							console.log(jqXHR);
+							if (jqXHR.jqXHRstatusText)
+								alert(jqXHR.jqXHRstatusText);
+						}
+					});
+				},
+				"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {},
+				"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {},
+				buttons: [
+					{
+						extend: 'colvis',
+						text: 'Column Visibility',
+						collectionLayout: 'two-column'
+					}
+				]
+			};
+		}
+
 		$('#search').on('click', function () {
 			var startDate = $('#startDate').val();
 			var endDate = $('#endDate').val();
@@ -100,243 +220,34 @@
 					Table.destroy();
 					$('#dataTable tr td').remove();
 				}
-				Table = $('#dataTable').DataTable({
-					serverSide: true,
-					order: [[0, "DESC"]],
-					// destroy: true,
-					stateSave: true,
-					initComplete: function () {
-						var state = Table.state.loaded();
-						// Restore input values from state
-						Table.columns().every(function (index) {
-							var col = this;
-							var title = $('#dataTable thead th').eq(index).text();
-							var header = $(col.header());
-
-							if ([3, 4].includes(index)) {
-								header.html(title + '<br><input type="text" placeholder="Search here..." />');
-								var input = $('input', header);
-
-								input.on('keyup change', function () {
-									col.search(this.value).draw();
-								});
-
-								if (state) {
-									var colSearch = state.columns[index].search.search;
-									if (colSearch) {
-										input.val(colSearch);
-									}
-								}
-							} else {
-								header.text(title);
-							}
-						});
-					},
-					"columnDefs": [
-						{orderable: false, targets: [3, 4]},
-						{
-							"render": function (data, type, row) {
-								return moment(data).format('DD MMM YYYY');
-							}, "targets": 0, type: 'date'
-						},
-						{
-							"render": function (data, type, row) {
-								return data + ' - ' + row['endTime'];
-							}, "targets": 2,
-						},
-						{
-							"render": function (data, type, row) {
-								return data + ' ' + row['lastName'];
-							}, "targets": 3,
-						},
-						{
-							"render": function (data, type, row) {
-								if (data == 0)
-									return data;
-								else
-									return '$' + data + '</span>';
-							}, "targets": [6, 7, 9, 10]
-						},
-						{
-							"render": function (data, type, row) {
-								if (data) {
-									return moment(data).format('DD MMM YYYY hh:mm:ss A');
-								} else {
-									return '--';
-								}
-							}, "targets": 12, type: 'date'
-						}
-					],
-					'aoColumns': [{mData: "date"}, {mData: "invoiceNumber"}, {mData: "startTime"}, {mData: "firstName"}, {mData: "name"}, {mData: "serviceType"}, {mData: "rate"}, {mData: "billRate"}, {mData: "hours"},
-						{mData: "amount"}, {mData: "billAmount"}, {mData: "comments"}, {mData: "updateAt"}, {
-							mData: "actions",
-							bSortable: false
-						}],
-					"aLengthMenu": [[15, 25, 50, 100, 200, -1], [15, 25, 50, 100, 200, 'All']],
-					"iDisplayLength": 15,
-					'bProcessing': true,
-					"language": {
-						processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>'
-					},
-					'bServerSide': true,
-					'sAjaxSource': '<?= admin_url('getServicesCustom/') ?>' + convertDate(startDate) + '/' + convertDate(endDate),
-					'fnServerData': function (sSource, aoData, fnCallback) {
-						$.ajax({
-							'dataType': 'json',
-							'type': 'POST',
-							'url': sSource,
-							'data': aoData,
-							'success': function (d, e, f) {
-								console.log(d);
-								fnCallback(d, e, f);
-							},
-							error: function (jqXHR, textStatus, errorThrown) {
-								console.log(jqXHR);
-								if (jqXHR.jqXHRstatusText)
-									alert(jqXHR.jqXHRstatusText);
-							}
-						});
-					},
-					"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
-						// console.log(nRow);
-					},
-					"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-
-					},
-					// dom: '<"top"B<"pull-right"f>>irtlp',
-					// dom: 'lfrtip',
-					buttons: [
-						{
-							extend: 'colvis',
-							text: 'Column Visibility',
-							collectionLayout: 'two-column'
-						}
-					]
-				});
+				Table = $('#dataTable').DataTable(makeTableOptions(
+					'<?= admin_url('getServicesCustom/') ?>' + convertDate(startDate) + '/' + convertDate(endDate)
+				));
 			}
 		});
 
-		Table = $('#dataTable').DataTable({
-			serverSide: true,
-			order: [[0, "DESC"]],
-			// destroy: true,
-			stateSave: true,
-			initComplete: function () {
-				var state = Table.state.loaded();
-				// Restore input values from state
-				Table.columns().every(function (index) {
-					var col = this;
-					var title = $('#dataTable thead th').eq(index).text();
-					var header = $(col.header());
-
-					if ([3, 4].includes(index)) {
-						header.html(title + '<br><input type="text" placeholder="Search here..." />');
-						var input = $('input', header);
-
-						input.on('keyup change', function () {
-							col.search(this.value).draw();
-						});
-
-						if (state) {
-							var colSearch = state.columns[index].search.search;
-							if (colSearch) {
-								input.val(colSearch);
-							}
-						}
-					} else {
-						header.text(title);
-					}
-				});
-			},
-			"columnDefs": [
-				{orderable: false, targets: [3, 4]},
-				{
-					"render": function (data, type, row) {
-						return moment(data).format('DD MMM YYYY');
-					}, "targets": 0, type: 'date'
-				},
-				{
-					"render": function (data, type, row) {
-						return data + ' - ' + row['endTime'];
-					}, "targets": 2,
-				},
-				{
-					"render": function (data, type, row) {
-						return data + ' ' + row['lastName'];
-					}, "targets": 3,
-				},
-				{
-					"render": function (data, type, row) {
-						if (data == 0)
-							return data;
-						else
-							return '$' + data + '</span>';
-					}, "targets": [6, 7, 10, 9]
-				},
-				{
-					"render": function (data, type, row) {
-						if (data) {
-							return moment(data).format('DD MMM YYYY hh:mm:ss A');
-						} else {
-							return '--';
-						}
-					}, "targets": 12, type: 'date'
-				}
-			],
-			'aoColumns': [{mData: "date"}, {mData: "invoiceNumber"}, {mData: "startTime"}, {mData: "firstName"}, {mData: "name"}, {mData: "serviceType"}, {mData: "rate"}, {mData: "billRate"}, {mData: "hours"},
-				{mData: "amount"}, {mData: "billAmount"}, {mData: "comments"}, {mData: "updateAt"}, {
-					mData: "actions",
-					bSortable: false
-				}],
-			"aLengthMenu": [[15, 25, 50, 100, 200, -1], [15, 25, 50, 100, 200, 'All']],
-			"iDisplayLength": 15,
-			'bProcessing': true,
-			"language": {
-				processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>'
-			},
-			'bServerSide': true,
-			'sAjaxSource': '<?= admin_url('getServices') ?>',
-			'fnServerData': function (sSource, aoData, fnCallback) {
-				$.ajax({
-					'dataType': 'json',
-					'type': 'POST',
-					'url': sSource,
-					'data': aoData,
-					'success': function (d, e, f) {
-						console.log(d);
-						fnCallback(d, e, f);
-					},
-					error: function (jqXHR, textStatus, errorThrown) {
-						console.log(jqXHR);
-						if (jqXHR.jqXHRstatusText)
-							alert(jqXHR.jqXHRstatusText);
-					}
-				});
-			},
-			"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
-				// console.log(nRow);
-			},
-			"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-
-			},
-			// dom: '<"top"B<"pull-right"f>>irtlp',
-			// dom: 'lfrtip',
-			buttons: [
-				{
-					extend: 'colvis',
-					text: 'Column Visibility',
-					collectionLayout: 'two-column'
-				}
-			]
-		});
+		Table = $('#dataTable').DataTable(makeTableOptions('<?= admin_url('getServices') ?>'));
 
 		Table.columns().eq(0).each(function (colIdx) {
 			$('input', Table.column(colIdx).header()).on('keyup change', function () {
-				Table
-					.column(colIdx)
-					.search(this.value)
-					.draw();
+				Table.column(colIdx).search(this.value).draw();
 			});
+		});
+
+		$('#clearSearch').on('click', function () {
+			// Clear flatpickr date inputs
+			$('#startDate').get(0)._flatpickr && $('#startDate').get(0)._flatpickr.clear();
+			$('#endDate').get(0)._flatpickr && $('#endDate').get(0)._flatpickr.clear();
+
+			// Clear any column search inputs in the header
+			$('#dataTable thead input[type="text"]').val('');
+
+			// Reset to all-services source
+			if ($.isEmptyObject(Table) == false) {
+				Table.destroy();
+				$('#dataTable tr td').remove();
+			}
+			Table = $('#dataTable').DataTable(makeTableOptions('<?= admin_url('getServices') ?>'));
 		});
 	});
 </script>

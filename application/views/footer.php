@@ -24,6 +24,8 @@
 <script src="<?= base_url('assets/vendors/datatables.net-bs5/dataTables.buttons.js') ?>"></script>
 <script src="<?= base_url('assets/vendors/datatables.net-bs5/buttons.bootstrap5.min.js') ?>"></script>
 <script src="<?= base_url('assets/vendors/datatables.net-bs5/buttons.colVis.js') ?>"></script>
+<script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/3.4.0/js/dataTables.fixedColumns.min.js"></script>
 <script src="<?= base_url('assets/js/data-table.js') ?>"></script>
 
 <!-- inject:js -->

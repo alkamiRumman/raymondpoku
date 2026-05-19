@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	function formatTime(time) {
 		var parts = time.split(':');
 		var h = parseInt(parts[0], 10);
-		var m = parts[1];
+		var m = parts[1].substring(0, 2);
 		var suffix = h >= 12 ? 'pm' : 'am';
 		h = h % 12 || 12;
 		return h + ':' + m + ' ' + suffix;
@@ -114,7 +114,8 @@ document.addEventListener('DOMContentLoaded', function () {
 				center: 'title',
 				right:  'dayGridMonth,listMonth'
 			},
-			fixedWeekCount: true,
+			fixedWeekCount: false,
+			showNonCurrentDates: false,
 			initialView:    viewType,
 			eventOverlap:   true,
 			timeZone:       'UTC',

@@ -161,14 +161,24 @@ if ($hour >= 17) $greeting = 'Good evening';
 <div class="row g-3 mb-3">
 	<div class="col-xl-6">
 		<div class="card h-100">
-			<div class="card-header d-flex align-items-center justify-content-between">
+			<div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
 				<div>
 					<h6 class="chart-title mb-0">Scheduled Hours</h6>
-					<p class="chart-sub mb-0">By client — <?= date('F Y') ?></p>
+					<p class="chart-sub mb-0">By client</p>
 				</div>
-				<span class="chart-badge" style="background:#EFF6FF;color:#2563EB">
-					<i data-feather="clock" style="width:12px;height:12px"></i> This Month
-				</span>
+				<div class="d-flex align-items-center gap-1">
+					<select id="scheduledMonth" class="form-select form-select-sm" style="width:auto">
+						<?php $months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+						foreach ($months as $mi => $mn): ?>
+						<option value="<?= $mi+1 ?>" <?= ($mi+1 == (int)date('n')) ? 'selected' : '' ?>><?= $mn ?></option>
+						<?php endforeach; ?>
+					</select>
+					<select id="scheduledYear" class="form-select form-select-sm" style="width:auto">
+						<?php for ($y = (int)date('Y')-3; $y <= (int)date('Y')+1; $y++): ?>
+						<option value="<?= $y ?>" <?= ($y == (int)date('Y')) ? 'selected' : '' ?>><?= $y ?></option>
+						<?php endfor; ?>
+					</select>
+				</div>
 			</div>
 			<div class="card-body pt-2">
 				<div id="apexBar"></div>
@@ -177,14 +187,23 @@ if ($hour >= 17) $greeting = 'Good evening';
 	</div>
 	<div class="col-xl-6">
 		<div class="card h-100">
-			<div class="card-header d-flex align-items-center justify-content-between">
+			<div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
 				<div>
 					<h6 class="chart-title mb-0">Invoice Breakdown</h6>
-					<p class="chart-sub mb-0">Total · Paid · Due — <?= date('F Y') ?></p>
+					<p class="chart-sub mb-0">Total · Paid · Due</p>
 				</div>
-				<span class="chart-badge" style="background:#F0FDF4;color:#16A34A">
-					<i data-feather="dollar-sign" style="width:12px;height:12px"></i> This Month
-				</span>
+				<div class="d-flex align-items-center gap-1">
+					<select id="invoiceBreakMonth" class="form-select form-select-sm" style="width:auto">
+						<?php foreach ($months as $mi => $mn): ?>
+						<option value="<?= $mi+1 ?>" <?= ($mi+1 == (int)date('n')) ? 'selected' : '' ?>><?= $mn ?></option>
+						<?php endforeach; ?>
+					</select>
+					<select id="invoiceBreakYear" class="form-select form-select-sm" style="width:auto">
+						<?php for ($y = (int)date('Y')-3; $y <= (int)date('Y')+1; $y++): ?>
+						<option value="<?= $y ?>" <?= ($y == (int)date('Y')) ? 'selected' : '' ?>><?= $y ?></option>
+						<?php endfor; ?>
+					</select>
+				</div>
 			</div>
 			<div class="card-body pt-2">
 				<div id="invoiceBar"></div>
@@ -199,14 +218,16 @@ if ($hour >= 17) $greeting = 'Good evening';
 <div class="row g-3 mb-3">
 	<div class="col-12">
 		<div class="card">
-			<div class="card-header d-flex align-items-center justify-content-between">
+			<div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
 				<div>
 					<h6 class="chart-title mb-0">Invoice Amount vs Paid Amount</h6>
-					<p class="chart-sub mb-0">Monthly comparison — <?= date('Y') ?></p>
+					<p class="chart-sub mb-0">Monthly comparison</p>
 				</div>
-				<span class="chart-badge" style="background:#EFF6FF;color:#2563EB">
-					<i data-feather="trending-up" style="width:12px;height:12px"></i> Full Year
-				</span>
+				<select id="invoicePaidYear" class="form-select form-select-sm" style="width:auto">
+					<?php for ($y = (int)date('Y')-3; $y <= (int)date('Y')+1; $y++): ?>
+					<option value="<?= $y ?>" <?= ($y == (int)date('Y')) ? 'selected' : '' ?>><?= $y ?></option>
+					<?php endfor; ?>
+				</select>
 			</div>
 			<div class="card-body pt-2">
 				<div style="position:relative;height:300px">
@@ -223,14 +244,16 @@ if ($hour >= 17) $greeting = 'Good evening';
 <div class="row g-3 mb-3">
 	<div class="col-12">
 		<div class="card">
-			<div class="card-header d-flex align-items-center justify-content-between">
+			<div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
 				<div>
 					<h6 class="chart-title mb-0">Payroll Hours vs Invoice Hours</h6>
-					<p class="chart-sub mb-0">Monthly comparison — <?= date('Y') ?></p>
+					<p class="chart-sub mb-0">Monthly comparison</p>
 				</div>
-				<span class="chart-badge" style="background:#FFFBEB;color:#D97706">
-					<i data-feather="activity" style="width:12px;height:12px"></i> Full Year
-				</span>
+				<select id="payrollYear" class="form-select form-select-sm" style="width:auto">
+					<?php for ($y = (int)date('Y')-3; $y <= (int)date('Y')+1; $y++): ?>
+					<option value="<?= $y ?>" <?= ($y == (int)date('Y')) ? 'selected' : '' ?>><?= $y ?></option>
+					<?php endfor; ?>
+				</select>
 			</div>
 			<div class="card-body pt-2">
 				<div style="position:relative;height:280px">
@@ -455,45 +478,31 @@ $(function () {
 		hoursNames.push(item.name);
 	});
 
+	var apexBarChart = null;
 	if ($('#apexBar').length) {
-		new ApexCharts(document.querySelector('#apexBar'), {
-			chart: {
-				type: 'bar',
-				height: 280,
-				toolbar: { show: false },
-				fontFamily: font,
-			},
+		apexBarChart = new ApexCharts(document.querySelector('#apexBar'), {
+			chart: { type: 'bar', height: 280, toolbar: { show: false }, fontFamily: font },
 			series: [{ name: 'Scheduled Hours', data: hoursData }],
 			colors: [blue],
-			plotOptions: {
-				bar: {
-					horizontal: true,
-					borderRadius: 4
-				}
-			},
-			xaxis: {
-				categories: hoursNames,
-				labels: {
-					show: true,
-					style: {
-						fontSize: '11px'
-					}
-				}
-			},
-			yaxis: {
-				labels: {
-					style: { fontSize: '12px', colors: muted },
-					formatter: function (v) { return v + 'h'; }
-				}
-			},
+			plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
+			xaxis: { categories: hoursNames, labels: { show: true, style: { fontSize: '11px' } } },
+			yaxis: { labels: { style: { fontSize: '12px', colors: muted }, formatter: function (v) { return v + 'h'; } } },
 			grid: { borderColor: border, strokeDashArray: 4 },
-			tooltip: {
-				y: { formatter: function (v) { return v + ' hrs'; } },
-				style: { fontFamily: font }
-			},
+			tooltip: { y: { formatter: function (v) { return v + ' hrs'; } }, style: { fontFamily: font } },
 			states: { hover: { filter: { type: 'darken', value: .85 } } }
-		}).render();
+		});
+		apexBarChart.render();
 	}
+
+	$('#scheduledMonth, #scheduledYear').on('change', function () {
+		if (!apexBarChart) return;
+		var m = $('#scheduledMonth').val(), y = $('#scheduledYear').val();
+		$.getJSON('<?= admin_url('getDashboardScheduledHoursData/') ?>' + m + '/' + y, function (data) {
+			var d = [], n = [];
+			data.forEach(function (item) { d.push(parseFloat(item.totalHours)); n.push(item.name); });
+			apexBarChart.updateOptions({ series: [{ name: 'Scheduled Hours', data: d }], xaxis: { categories: n } });
+		});
+	});
 
 	/* ── Invoice Breakdown by Client (ApexCharts grouped bar) ── */
 	var invTotal = [], invPaid = [], invDue = [], invNames = [];
@@ -505,205 +514,122 @@ $(function () {
 		invNames.push(item.name);
 	});
 
+	var invoiceBarChart = null;
 	if ($('#invoiceBar').length) {
-		new ApexCharts(document.querySelector('#invoiceBar'), {
-			chart: {
-				type: 'bar',
-				height: 280,
-				toolbar: { show: false },
-				fontFamily: font,
-			},
+		invoiceBarChart = new ApexCharts(document.querySelector('#invoiceBar'), {
+			chart: { type: 'bar', height: 280, toolbar: { show: false }, fontFamily: font },
 			series: [
-				{ name: 'Total',  data: invTotal },
-				{ name: 'Paid',   data: invPaid  },
-				{ name: 'Due',    data: invDue   }
+				{ name: 'Total', data: invTotal },
+				{ name: 'Paid',  data: invPaid  },
+				{ name: 'Due',   data: invDue   }
 			],
 			colors: [blue, green, red],
 			plotOptions: {
-				bar: {
-					horizontal: false,
-					borderRadius: 4,
-					columnWidth: invNames.length <= 2 ? '25%' : '55%',
-					dataLabels: { position: 'top' }
-				}
+				bar: { horizontal: false, borderRadius: 4, columnWidth: invNames.length <= 2 ? '25%' : '55%', dataLabels: { position: 'top' } }
 			},
 			dataLabels: { enabled: false },
 			stroke: { show: true, width: 2, colors: ['transparent'] },
-			xaxis: {
-				categories: invNames,
-				labels: { style: { fontSize: '12px', colors: muted } },
-				axisBorder: { color: border },
-			},
-			yaxis: {
-				labels: {
-					style: { fontSize: '12px', colors: muted },
-					formatter: function (v) { return '$' + v; }
-				}
-			},
-			legend: {
-				position: 'top',
-				horizontalAlign: 'right',
-				fontFamily: font,
-				fontSize: '12px',
-				markers: { radius: 4 }
-			},
+			xaxis: { categories: invNames, labels: { style: { fontSize: '12px', colors: muted } }, axisBorder: { color: border } },
+			yaxis: { labels: { style: { fontSize: '12px', colors: muted }, formatter: function (v) { return '$' + v; } } },
+			legend: { position: 'top', horizontalAlign: 'right', fontFamily: font, fontSize: '12px', markers: { radius: 4 } },
 			grid: { borderColor: border, strokeDashArray: 4 },
-			tooltip: {
-				y: { formatter: function (v) { return '$' + parseFloat(v).toFixed(2); } },
-				style: { fontFamily: font }
-			}
-		}).render();
+			tooltip: { y: { formatter: function (v) { return '$' + parseFloat(v).toFixed(2); } }, style: { fontFamily: font } }
+		});
+		invoiceBarChart.render();
 	}
 
-	/* ── Invoice Amount vs Paid — Full Year (Chart.js) ── */
+	$('#invoiceBreakMonth, #invoiceBreakYear').on('change', function () {
+		if (!invoiceBarChart) return;
+		var m = $('#invoiceBreakMonth').val(), y = $('#invoiceBreakYear').val();
+		$.getJSON('<?= admin_url('getDashboardInvoiceBreakdownData/') ?>' + m + '/' + y, function (data) {
+			var t = [], p = [], d = [], n = [];
+			data.forEach(function (item) {
+				t.push(parseFloat(item.total)); p.push(parseFloat(item.paidAmount));
+				d.push(parseFloat(item.dueAmount)); n.push(item.name);
+			});
+			invoiceBarChart.updateOptions({
+				series: [{ name: 'Total', data: t }, { name: 'Paid', data: p }, { name: 'Due', data: d }],
+				xaxis: { categories: n }
+			});
+		});
+	});
+
+	/* ── Invoice Amount vs Paid — Annual (Chart.js) ── */
+	var invoicePaidChart = null;
 	if ($('#invoicePaid').length) {
 		var cDataI = JSON.parse(`<?php echo $data1; ?>`);
-		new Chart(document.getElementById('invoicePaid').getContext('2d'), {
+		invoicePaidChart = new Chart(document.getElementById('invoicePaid').getContext('2d'), {
 			type: 'bar',
 			data: {
 				labels: cDataI.label,
 				datasets: [
-					{
-						type: 'bar',
-						label: 'Total Invoiced',
-						data: cDataI.totalAmount,
-						backgroundColor: 'rgba(37,99,235,.75)',
-						borderColor:     'rgba(37,99,235,1)',
-						borderWidth: 0,
-						borderRadius: 4,
-						barThickness: 22,
-						order: 1
-					},
-					{
-						type: 'bar',
-						label: 'Total Paid',
-						data: cDataI.paidAmount,
-						backgroundColor: 'rgba(22,163,74,.75)',
-						borderColor:     'rgba(22,163,74,1)',
-						borderWidth: 0,
-						borderRadius: 4,
-						barThickness: 22,
-						order: 2
-					},
-					{
-						type: 'line',
-						label: 'Balance Due',
-						data: cDataI.totalDue,
-						borderColor: red,
-						backgroundColor: 'rgba(220,38,38,.08)',
-						borderWidth: 2,
-						pointRadius: 4,
-						pointBackgroundColor: red,
-						fill: true,
-						tension: .3,
-						order: 0
-					}
+					{ type: 'bar',  label: 'Total Invoiced', data: cDataI.totalAmount, backgroundColor: 'rgba(37,99,235,.75)', borderColor: 'rgba(37,99,235,1)', borderWidth: 0, borderRadius: 4, barThickness: 22, order: 1 },
+					{ type: 'bar',  label: 'Total Paid',     data: cDataI.paidAmount,   backgroundColor: 'rgba(22,163,74,.75)', borderColor: 'rgba(22,163,74,1)',  borderWidth: 0, borderRadius: 4, barThickness: 22, order: 2 },
+					{ type: 'line', label: 'Balance Due',    data: cDataI.totalDue,     borderColor: red, backgroundColor: 'rgba(220,38,38,.08)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: red, fill: true, tension: .3, order: 0 }
 				]
 			},
 			options: {
-				responsive: true,
-				maintainAspectRatio: false,
+				responsive: true, maintainAspectRatio: false,
 				interaction: { mode: 'index', intersect: false },
 				plugins: {
-					legend: {
-						display: true,
-						position: 'top',
-						align: 'end',
-						labels: { font: { family: font, size: 12 }, usePointStyle: true, pointStyleWidth: 10 }
-					},
-					tooltip: {
-						callbacks: {
-							label: function (ctx) { return ' ' + ctx.dataset.label + ': $' + parseFloat(ctx.raw).toFixed(2); }
-						},
-						bodyFont: { family: font },
-						titleFont: { family: font }
-					}
+					legend: { display: true, position: 'top', align: 'end', labels: { font: { family: font, size: 12 }, usePointStyle: true, pointStyleWidth: 10 } },
+					tooltip: { callbacks: { label: function (ctx) { return ' ' + ctx.dataset.label + ': $' + parseFloat(ctx.raw).toFixed(2); } }, bodyFont: { family: font }, titleFont: { family: font } }
 				},
 				scales: {
-					x: {
-						grid: { display: false },
-						ticks: { font: { family: font, size: 12 }, color: muted }
-					},
-					y: {
-						beginAtZero: true,
-						grid: { color: border, drawBorder: false },
-						ticks: {
-							font: { family: font, size: 12 },
-							color: muted,
-							callback: function (v) { return '$' + v; }
-						}
-					}
+					x: { grid: { display: false }, ticks: { font: { family: font, size: 12 }, color: muted } },
+					y: { beginAtZero: true, grid: { color: border, drawBorder: false }, ticks: { font: { family: font, size: 12 }, color: muted, callback: function (v) { return '$' + v; } } }
 				}
 			}
 		});
 	}
 
-	/* ── Payroll Hours vs Invoice Hours — Full Year (Chart.js) ── */
+	$('#invoicePaidYear').on('change', function () {
+		if (!invoicePaidChart) return;
+		$.getJSON('<?= admin_url('getDashboardAnnualInvoiceData/') ?>' + $(this).val(), function (d) {
+			invoicePaidChart.data.labels           = d.label;
+			invoicePaidChart.data.datasets[0].data = d.totalAmount;
+			invoicePaidChart.data.datasets[1].data = d.paidAmount;
+			invoicePaidChart.data.datasets[2].data = d.totalDue;
+			invoicePaidChart.update();
+		});
+	});
+
+	/* ── Payroll Hours vs Invoice Hours — Annual (Chart.js) ── */
+	var hoursChart = null;
 	if ($('#totalHoursInvoiceHours').length) {
 		var cDataH = JSON.parse(`<?php echo $data11; ?>`);
-		new Chart(document.getElementById('totalHoursInvoiceHours').getContext('2d'), {
+		hoursChart = new Chart(document.getElementById('totalHoursInvoiceHours').getContext('2d'), {
 			type: 'bar',
 			data: {
 				labels: cDataH.label,
 				datasets: [
-					{
-						type: 'bar',
-						label: 'Payroll Hours',
-						data: cDataH.totalHours,
-						backgroundColor: 'rgba(37,99,235,.75)',
-						borderWidth: 0,
-						borderRadius: 4,
-						barThickness: 22,
-						order: 1
-					},
-					{
-						type: 'bar',
-						label: 'Invoice Hours',
-						data: cDataH.totalInvoiceHours,
-						backgroundColor: 'rgba(124,58,237,.75)',
-						borderWidth: 0,
-						borderRadius: 4,
-						barThickness: 22,
-						order: 2
-					}
+					{ type: 'bar', label: 'Payroll Hours',  data: cDataH.totalHours,        backgroundColor: 'rgba(37,99,235,.75)', borderWidth: 0, borderRadius: 4, barThickness: 22, order: 1 },
+					{ type: 'bar', label: 'Invoice Hours',  data: cDataH.totalInvoiceHours,  backgroundColor: 'rgba(124,58,237,.75)', borderWidth: 0, borderRadius: 4, barThickness: 22, order: 2 }
 				]
 			},
 			options: {
-				responsive: true,
-				maintainAspectRatio: false,
+				responsive: true, maintainAspectRatio: false,
 				interaction: { mode: 'index', intersect: false },
 				plugins: {
-					legend: {
-						display: true,
-						position: 'top',
-						align: 'end',
-						labels: { font: { family: font, size: 12 }, usePointStyle: true, pointStyleWidth: 10 }
-					},
-					tooltip: {
-						callbacks: {
-							label: function (ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.raw + ' hrs'; }
-						},
-						bodyFont: { family: font },
-						titleFont: { family: font }
-					}
+					legend: { display: true, position: 'top', align: 'end', labels: { font: { family: font, size: 12 }, usePointStyle: true, pointStyleWidth: 10 } },
+					tooltip: { callbacks: { label: function (ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.raw + ' hrs'; } }, bodyFont: { family: font }, titleFont: { family: font } }
 				},
 				scales: {
-					x: {
-						grid: { display: false },
-						ticks: { font: { family: font, size: 12 }, color: muted }
-					},
-					y: {
-						beginAtZero: true,
-						grid: { color: border, drawBorder: false },
-						ticks: {
-							font: { family: font, size: 12 },
-							color: muted,
-							callback: function (v) { return v + 'h'; }
-						}
-					}
+					x: { grid: { display: false }, ticks: { font: { family: font, size: 12 }, color: muted } },
+					y: { beginAtZero: true, grid: { color: border, drawBorder: false }, ticks: { font: { family: font, size: 12 }, color: muted, callback: function (v) { return v + 'h'; } } }
 				}
 			}
 		});
 	}
+
+	$('#payrollYear').on('change', function () {
+		if (!hoursChart) return;
+		$.getJSON('<?= admin_url('getDashboardAnnualHoursData/') ?>' + $(this).val(), function (d) {
+			hoursChart.data.labels           = d.label;
+			hoursChart.data.datasets[0].data = d.totalHours;
+			hoursChart.data.datasets[1].data = d.totalInvoiceHours;
+			hoursChart.update();
+		});
+	});
 });
 </script>

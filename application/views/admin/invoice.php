@@ -35,157 +35,82 @@
 						</select>
 					</div>
 				</div>
-				<div class="table-responsive">
-					<table id="reportTable" class="table table-bordered serverSide-table"
-						   style="width: 100% !important;">
-						<thead class="bg-info">
-						<tr id="headerRow">
-							<th class="text-dark">Invoice Date</th>
-							<th class="text-dark">Client Name</th>
-							<th class="text-dark">Billing Address</th>
-							<th class="text-dark">Phone</th>
-							<th class="text-dark">Total Hours</th>
-							<th class="text-dark">Total Amount</th>
-							<th class="text-dark">Paid Amount</th>
-							<th class="text-dark">Due Amount</th>
-							<th class="text-dark">Status</th>
-							<th class="text-dark">Actions</th>
-						</tr>
-						</thead>
-						<tbody id="tableBody"></tbody>
-						</tfoot>
-					</table>
-				</div>
+				<table id="reportTable" class="table table-bordered serverSide-table"
+					   style="width: 100% !important;">
+					<thead class="bg-info">
+					<tr id="headerRow">
+						<th class="text-dark">Actions</th>
+						<th class="text-dark">Invoice Date</th>
+						<th class="text-dark">Client Name</th>
+						<th class="text-dark">Billing Address</th>
+						<th class="text-dark">Phone</th>
+						<th class="text-dark">Total Hours</th>
+						<th class="text-dark">Total Amount</th>
+						<th class="text-dark">Paid Amount</th>
+						<th class="text-dark">Due Amount</th>
+						<th class="text-dark">Status</th>
+					</tr>
+					</thead>
+					<tbody id="tableBody"></tbody>
+				</table>
 			</div>
 		</div>
 	</div>
 </div>
 <script>
 	var Table = [];
-	$(document).ready(function () {
-		$("#monthSearch, #yearSearch").on('change', function () {
-			var month = $('#monthSearch').find(":selected").val();
-			var year = $('#yearSearch').find(":selected").val();
-			Table.destroy();
-			$('#reportTable tr td').remove();
-			if (month) {
-				Table = $('.serverSide-table').DataTable({
-					serverSide: true,
-					order: [[0, "DESC"]],
-					// destroy: true,
-					stateSave: true,
-					"columnDefs": [
-						{
-							"render": function (data, type, row) {
-								return moment(data).format('DD MMM YYYY');
-							}, "targets": 0, type: 'date'
-						},
-						{
-							"render": function (data, type, row) {
-								if (data > 0) {
-									return '$' + data;
-								} else {
-									return data;
-								}
 
-							}, "targets": [5, 6, 7]
-						},
-						{
-							"render": function (data, type, row) {
-								if (data == 'Sent') {
-									return '<span class="badge bg-warning text-dark">Sent</span>';
-								} else if (data == 'Partial Paid') {
-									return '<span class="badge bg-info text-dark">Partial Paid</span>';
-								} else if (data == 'Fully Paid') {
-									return '<span class="badge bg-success text-light">Fully Paid</span>';
-								} else {
-									return '<span class="badge bg-danger text-dark">' + data + '</span>';
-								}
-							}, "targets": 8
-						}
-					],
-					'aoColumns': [{mData: "invoiceDate"}, {mData: "name"}, {mData: "billingAddress"}, {mData: "phone"}, {mData: "totalHours"},
-						{mData: "total"}, {mData: "paidAmount"}, {mData: "dueAmount"}, {mData: "status"}, {
-							mData: "actions",
-							bSortable: false
-						}],
-					"aLengthMenu": [[25, 50, 100, 200, 500, -1], [25, 50, 100, 200, 500, 'All']],
-					"iDisplayLength": 25,
-					'bProcessing': true,
-					"language": {
-						processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>'
-					},
-					'bServerSide': true,
-					'sAjaxSource': '<?= admin_url('getCustomInvoice/') ?>' + month + '/' + year,
-					'fnServerData': function (sSource, aoData, fnCallback) {
-						$.ajax({
-							'dataType': 'json',
-							'type': 'POST',
-							'url': sSource,
-							'data': aoData,
-							'success': function (d, e, f) {
-								console.log(d);
-								fnCallback(d, e, f);
-							},
-							error: function (jqXHR, textStatus, errorThrown) {
-								console.log(jqXHR);
-								if (jqXHR.jqXHRstatusText)
-									alert(jqXHR.jqXHRstatusText);
-							}
-						});
-					},
-					"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
-						// console.log(nRow);
-					},
-					"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-
+	function makeInvoiceColumnDefs() {
+		return [
+			{
+				"render": function (data, type, row) {
+					return moment(data).format('DD MMM YYYY');
+				}, "targets": 1, type: 'date'
+			},
+			{
+				"render": function (data, type, row) {
+					if (data > 0) {
+						return '$' + data;
+					} else {
+						return data;
 					}
-					// dom: '<"top"B<"pull-right"l>>irtp',
-					// dom: 'fi<"pull-right"l>rtp',
-				});
+				}, "targets": [6, 7, 8]
+			},
+			{
+				"render": function (data, type, row) {
+					if (data == 'Sent') {
+						return '<span class="badge bg-warning text-dark">Sent</span>';
+					} else if (data == 'Partial Paid') {
+						return '<span class="badge bg-info text-dark">Partial Paid</span>';
+					} else if (data == 'Fully Paid') {
+						return '<span class="badge bg-success text-light">Fully Paid</span>';
+					} else {
+						return '<span class="badge bg-danger text-dark">' + data + '</span>';
+					}
+				}, "targets": 9
 			}
-		});
-		Table = $('.serverSide-table').DataTable({
-			serverSide: true,
-			order: [[0, "DESC"]],
-			// destroy: true,
-			stateSave: true,
-			"columnDefs": [
-				{
-					"render": function (data, type, row) {
-						return moment(data).format('DD MMM YYYY');
-					}, "targets": 0, type: 'date'
-				},
-				{
-					"render": function (data, type, row) {
-						if (data == 'Sent') {
-							return '<span class="badge bg-warning text-dark">Sent</span>';
-						} else if (data == 'Partial Paid') {
-							return '<span class="badge bg-info text-dark">Partial Paid</span>';
-						} else if (data == 'Fully Paid') {
-							return '<span class="badge bg-success text-light">Fully Paid</span>';
-						} else {
-							return '<span class="badge bg-danger text-dark">' + data + '</span>';
-						}
-					}, "targets": 8
-				},
-				{
-					"render": function (data, type, row) {
-						if (data > 0) {
-							return '$' + data;
-						} else {
-							return data;
-						}
+		];
+	}
 
-					}, "targets": [5, 6, 7]
-				}
-			],
-			'aoColumns': [{mData: "invoiceDate"}, {mData: "name"}, {mData: "billingAddress"}, {mData: "phone"}, {mData: "totalHours"},
-				{mData: "total"}, {mData: "paidAmount"}, {mData: "dueAmount"}, {mData: "status"},
-				{
-					mData: "actions",
-					bSortable: false
-				}],
+	function makeInvoiceAoColumns() {
+		return [
+			{mData: "actions", bSortable: false},
+			{mData: "invoiceDate"}, {mData: "name"}, {mData: "billingAddress"}, {mData: "phone"}, {mData: "totalHours"},
+			{mData: "total"}, {mData: "paidAmount"}, {mData: "dueAmount"}, {mData: "status"}
+		];
+	}
+
+	function makeInvoiceTableOptions(ajaxSource) {
+		return {
+			serverSide: true,
+			order: [[1, "DESC"]],
+			stateSave: true,
+			scrollX: true,
+			scrollY: '65vh',
+			scrollCollapse: true,
+			fixedColumns: { leftColumns: 2 },
+			"columnDefs": makeInvoiceColumnDefs(),
+			'aoColumns': makeInvoiceAoColumns(),
 			"aLengthMenu": [[25, 50, 100, 200, 500, -1], [25, 50, 100, 200, 500, 'All']],
 			"iDisplayLength": 25,
 			'bProcessing': true,
@@ -193,7 +118,7 @@
 				processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>'
 			},
 			'bServerSide': true,
-			'sAjaxSource': '<?= admin_url('getInvoice') ?>',
+			'sAjaxSource': ajaxSource,
 			'fnServerData': function (sSource, aoData, fnCallback) {
 				$.ajax({
 					'dataType': 'json',
@@ -211,6 +136,8 @@
 					}
 				});
 			},
+			"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {},
+			"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {},
 			buttons: [
 				{
 					extend: 'colvis',
@@ -222,12 +149,11 @@
 					action: function (e, dt, node, config) {
 						var headers = [];
 						dt.columns().every(function (index) {
-							if (index < dt.columns().count() - 1) { // Exclude the last column
+							if (index < dt.columns().count() - 1) {
 								headers.push(this.header().textContent.trim());
 							}
 						});
 
-						// Extract data
 						var data = [];
 						dt.rows({search: 'applied'}).every(function (rowIdx, tableLoop, rowLoop) {
 							var rowData = [];
@@ -251,6 +177,24 @@
 					}
 				}
 			]
+		};
+	}
+
+	$(document).ready(function () {
+		$("#monthSearch, #yearSearch").on('change', function () {
+			var month = $('#monthSearch').find(":selected").val();
+			var year = $('#yearSearch').find(":selected").val();
+			Table.destroy();
+			$('#reportTable tr td').remove();
+			if (month) {
+				Table = $('.serverSide-table').DataTable(
+					makeInvoiceTableOptions('<?= admin_url('getCustomInvoice/') ?>' + month + '/' + year)
+				);
+			}
 		});
+
+		Table = $('.serverSide-table').DataTable(
+			makeInvoiceTableOptions('<?= admin_url('getInvoice') ?>')
+		);
 	});
 </script>

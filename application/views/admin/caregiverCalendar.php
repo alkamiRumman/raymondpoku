@@ -110,7 +110,7 @@ function formatTime(t) {
     if (!t) return '';
     var p = t.split(':');
     var h = parseInt(p[0], 10);
-    var m = p[1];
+    var m = p[1].substring(0, 2);
     var s = h >= 12 ? 'pm' : 'am';
     h = h % 12 || 12;
     return h + ':' + m + s;

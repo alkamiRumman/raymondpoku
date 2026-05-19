@@ -30,6 +30,8 @@
 	<link rel="stylesheet" href="<?= base_url('assets/vendors/datatables.net-bs5/dataTables.bootstrap5.css') ?>">
 	<link rel="stylesheet" href="<?= base_url('assets/vendors/datatables.net-bs5/buttons.dataTables.css') ?>">
 	<link rel="stylesheet" href="<?= base_url('assets/vendors/datatables.net-bs5/dataTables.colVis.min.css') ?>">
+	<link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.bootstrap5.min.css">
+	<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.4.0/css/fixedColumns.bootstrap5.min.css">
 	<!-- Layout styles -->
 	<link rel="stylesheet" href="<?= base_url('assets/css/demo1/style.css') ?>">
 	<!-- End layout styles -->

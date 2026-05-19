@@ -13,31 +13,29 @@
 				</div>
 			</h4>
 			<div class="card-body">
-				<div class="table-responsive">
-					<table id="reportTable" class="table serverSide-table"
-						   style="width: 100% !important;">
-						<thead class="bg-info">
-						<tr>
-							<th class="text-dark">Name</th>
-							<th class="text-dark">address</th>
-							<th class="text-dark">Phone</th>
-							<th class="text-dark">Email Address</th>
-							<th class="text-dark">SIN #</th>
-							<th class="text-dark">Date of Birth</th>
-							<th class="text-dark">Hiring Date</th>
-							<th class="text-dark">Employee Rate</th>
-							<th class="text-dark">Position</th>
-							<th class="text-dark">Notes/Comments</th>
-							<th class="text-dark">Create At</th>
-							<th class="text-dark">Last Update</th>
-							<th class="text-dark">Status</th>
-							<th class="text-dark">Actions</th>
-						</tr>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
+				<table id="reportTable" class="table serverSide-table"
+					   style="width: 100% !important;">
+					<thead class="bg-info">
+					<tr>
+						<th class="text-dark">Actions</th>
+						<th class="text-dark">Name</th>
+						<th class="text-dark">Address</th>
+						<th class="text-dark">Phone</th>
+						<th class="text-dark">Email Address</th>
+						<th class="text-dark">SIN #</th>
+						<th class="text-dark">Date of Birth</th>
+						<th class="text-dark">Hiring Date</th>
+						<th class="text-dark">Employee Rate</th>
+						<th class="text-dark">Position</th>
+						<th class="text-dark">Notes/Comments</th>
+						<th class="text-dark">Create At</th>
+						<th class="text-dark">Last Update</th>
+						<th class="text-dark">Status</th>
+					</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
@@ -47,14 +45,17 @@
 	$(document).ready(function () {
 		Table = $('.serverSide-table').DataTable({
 			serverSide: true,
-			order: [[0, "ASC"]],
-			// destroy: true,
+			order: [[1, "ASC"]],
 			stateSave: true,
+			scrollX: true,
+			scrollY: '65vh',
+			scrollCollapse: true,
+			fixedColumns: { leftColumns: 2 },
 			"columnDefs": [
 				{
 					"render": function (data, type, row) {
 						return data + ' ' + row['lastName'];
-					}, "targets": 0,
+					}, "targets": 1,
 				},
 				{
 					"render": function (data, type, row) {
@@ -63,8 +64,7 @@
 						} else {
 							return data;
 						}
-
-					}, "targets": 7
+					}, "targets": 8
 				},
 				{
 					"render": function (data, type, row) {
@@ -73,23 +73,22 @@
 						} else {
 							return '-';
 						}
-
-					}, "targets": [5, 6, 10, 11], type: 'date'
+					}, "targets": [6, 7, 11, 12], type: 'date'
 				},
 				{
 					"render": function (data, type, row) {
 						return '<a onclick="showSwal(\'passing-parameter-execute-archive\', \'' + '<?php echo base_url('admin/changeStatus/'); ?>' + row['id'] + '\')">' +
 							'<button class="btn btn-xs btn-success text-white">Active</button></a>';
 					},
-					"targets": 12
+					"targets": 13
 				}
 			],
-			'aoColumns': [{mData: "firstName"}, {mData: "address"}, {mData: "phone"}, {mData: "email"}, {mData: "sin"},
+			'aoColumns': [
+				{mData: "actions", bSortable: false},
+				{mData: "firstName"}, {mData: "address"}, {mData: "phone"}, {mData: "email"}, {mData: "sin"},
 				{mData: "dateOfBirth"}, {mData: "hiringDate"}, {mData: "baseRate"}, {mData: "position"}, {mData: "notes"},
-				{mData: "createAt"}, {mData: "updateAt"}, {mData: "status"}, {
-					mData: "actions",
-					bSortable: false
-				}],
+				{mData: "createAt"}, {mData: "updateAt"}, {mData: "status"}
+			],
 			"aLengthMenu": [[25, 50, 100, 200, 500, -1], [25, 50, 100, 200, 500, 'All']],
 			"iDisplayLength": 25,
 			'bProcessing': true,
@@ -115,14 +114,8 @@
 					}
 				});
 			},
-			"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
-				// console.log(nRow);
-			},
-			"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-
-			}
-			// dom: '<"top"B<"pull-right"l>>irtp',
-			// dom: 'fi<"pull-right"l>rtp',
+			"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {},
+			"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {}
 		});
 	});
 </script>

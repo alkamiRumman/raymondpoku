@@ -130,8 +130,10 @@ class Admin extends MY_Controller
 
 	function getCaregivers()
 	{
-		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editCaregiver/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
-            <button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteCaregivers/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$action = '<div class="d-flex gap-1 justify-content-center">'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editCaregiver/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteCaregivers/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
+			. '</div>';
 		$this->datatables->select('id, firstName, lastName, address, phone, email, sin, dateOfBirth, hiringDate, baseRate, position, notes, status, createAt, updateAt');
 		$this->datatables->from(TABLE_CAREGIVERS);
 		$this->datatables->where(array('status' => 0));
@@ -235,9 +237,11 @@ class Admin extends MY_Controller
 
 	function getClients()
 	{
-		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')" class="btn btn-xs btn-success me-1">Edit</a>'
-			. '<a href="' . base_url('admin/clientStatement/$1') . '" class="btn btn-xs btn-info me-1">Statement</a>'
-			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteClients/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$action = '<div class="d-flex gap-1 justify-content-center">'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<a href="' . base_url('admin/clientStatement/$1') . '" class="btn btn-xs btn-info px-2 py-1" title="Statement"><i class="feather icon-file-text"></i></a>'
+			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteClients/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
+			. '</div>';
 		$this->datatables->select('c.id as id, c.name, c.address, c.phone, c.dol, c.referralSource, c.budget, c.referralDate, c.billingAddress, c.companyName, c.adjustorName, c.adjustorEmail, c.adjustorPhone, c.adjustorFax, c.billRate, c.budgetedHours, c.status, COALESCE(SUM(i.total),0) as totalBilled, COALESCE(SUM(i.paidAmount),0) as totalPaid, COALESCE(SUM(i.dueAmount),0) as outstanding, c.createAt, c.updateAt');
 		$this->datatables->from(TABLE_CLIENTS . ' as c');
 		$this->datatables->join(TABLE_INVOICES . ' as i', 'i.clientId = c.id', 'left');
@@ -430,8 +434,10 @@ class Admin extends MY_Controller
 
 	function getServices()
 	{
-		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
-            <button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$action = '<div class="d-flex gap-1 justify-content-center">'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
+			. '</div>';
 		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
 		$this->datatables->from(TABLE_SERVICES . ' as s');
 		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
@@ -444,8 +450,10 @@ class Admin extends MY_Controller
 
 	function getServicesCustom($startDate, $endDate)
 	{
-		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
-            <button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger">Delete</button>';
+		$action = '<div class="d-flex gap-1 justify-content-center">'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
+			. '</div>';
 		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
 		$this->datatables->from(TABLE_SERVICES . ' as s');
 		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
@@ -629,6 +637,88 @@ class Admin extends MY_Controller
 		$this->makeView('/calendar');
 	}
 
+	function getDashboardScheduledHoursData($month, $year)
+	{
+		$month = (int) $month;
+		$year  = (int) $year;
+		$start = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-01';
+		$end   = date('Y-m-t', strtotime($start));
+		$this->db->select('cl.name, SUM(s.amount) as totalAmount, SUM(s.hours) as totalHours');
+		$this->db->from(TABLE_SERVICES . ' as s');
+		$this->db->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
+		$this->db->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
+		$this->db->where('s.date >=', $start);
+		$this->db->where('s.date <=', $end);
+		$this->db->where(array('c.status' => 0, 'cl.status' => 0));
+		$this->db->group_by('cl.id');
+		echo json_encode($this->db->get()->result());
+	}
+
+	function getDashboardInvoiceBreakdownData($month, $year)
+	{
+		$month = (int) $month;
+		$year  = (int) $year;
+		$start = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-01';
+		$end   = date('Y-m-t', strtotime($start));
+		$this->db->select('cl.name, SUM(i.total) as total, SUM(i.paidAmount) as paidAmount, SUM(i.dueAmount) as dueAmount');
+		$this->db->from(TABLE_INVOICES . ' as i');
+		$this->db->join(TABLE_CLIENTS . ' as cl', 'i.clientId = cl.id');
+		$this->db->where('i.invoiceDate >=', $start);
+		$this->db->where('i.invoiceDate <=', $end);
+		$this->db->group_by('cl.id');
+		echo json_encode($this->db->get()->result());
+	}
+
+	function getDashboardAnnualInvoiceData($year)
+	{
+		$year  = (int) $year;
+		$query = $this->db->query("SELECT SUM(d.totalAmount) as totalAmount, SUM(d.paidAmount) as paidAmount, MONTHNAME(d.invoiceDate) as month_name
+			FROM invoices d JOIN clients c ON d.clientId = c.id
+			WHERE YEAR(d.invoiceDate) = $year
+			GROUP BY MONTH(d.invoiceDate) ORDER BY MONTH(d.invoiceDate) ASC")->result();
+		$data = array('label' => array(), 'totalAmount' => array(), 'paidAmount' => array(), 'totalDue' => array());
+		foreach ($query as $row) {
+			$data['label'][]       = $row->month_name;
+			$total                 = isset($row->totalAmount) ? round($row->totalAmount, 2) : 0;
+			$paid                  = isset($row->paidAmount)  ? round($row->paidAmount, 2)  : 0;
+			$data['totalAmount'][] = $total;
+			$data['paidAmount'][]  = $paid;
+			$data['totalDue'][]    = round($total - $paid, 2);
+		}
+		echo json_encode($data);
+	}
+
+	function getDashboardAnnualHoursData($year)
+	{
+		$year    = (int) $year;
+		$query2  = $this->db->query("SELECT SUM(s.hours) as totalHours, MONTHNAME(s.date) as month_name
+			FROM services s JOIN caregivers c ON s.caregiverId = c.id JOIN clients cl ON s.clientId = cl.id
+			WHERE YEAR(s.date) = $year GROUP BY MONTH(s.date)")->result();
+		$query3  = $this->db->query("SELECT SUM(i.totalHours) as totalInvoiceHours, MONTHNAME(i.invoiceDate) as month_name
+			FROM invoices i JOIN clients cl ON i.clientId = cl.id
+			WHERE YEAR(i.invoiceDate) = $year GROUP BY MONTH(i.invoiceDate)")->result();
+		$merged  = array();
+		foreach (array_merge($query2, $query3) as $entry) {
+			if (!isset($merged[$entry->month_name])) {
+				$merged[$entry->month_name] = clone $entry;
+			} else {
+				foreach ($entry as $k => $v) {
+					$merged[$entry->month_name]->$k = $v;
+				}
+			}
+		}
+		uksort($merged, function ($a, $b) {
+			return date('n', strtotime($a . ' 1')) - date('n', strtotime($b . ' 1'));
+		});
+		$data = array('label' => array(), 'totalHours' => array(), 'totalInvoiceHours' => array());
+		foreach ($merged as $row) {
+			$data['label'][]             = $row->month_name;
+			$data['totalHours'][]        = isset($row->totalHours)        ? round($row->totalHours, 2)        : 0;
+			$data['totalInvoiceHours'][] = isset($row->totalInvoiceHours) ? round($row->totalInvoiceHours, 2) : 0;
+		}
+		echo json_encode($data);
+	}
+
 	function caregiverCalendar()
 	{
 		$this->data['title'] = "Caregiver Calendar";
@@ -679,8 +769,10 @@ class Admin extends MY_Controller
 
 	function getInvoice()
 	{
-		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
-		<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info">Print</a>';
+		$action = '<div class="d-flex gap-1 justify-content-center">'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info px-2 py-1" title="Print"><i class="feather icon-printer"></i></a>'
+			. '</div>';
 		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
 		$this->datatables->from(TABLE_INVOICES . ' as i');
 		$this->datatables->join(TABLE_CLIENTS . ' as cl', 'i.clientId = cl.id');
@@ -690,8 +782,10 @@ class Admin extends MY_Controller
 
 	function getCustomInvoice($month, $year)
 	{
-		$action = '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success">Edit</a>
-		<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info">Print</a>';
+		$action = '<div class="d-flex gap-1 justify-content-center">'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info px-2 py-1" title="Print"><i class="feather icon-printer"></i></a>'
+			. '</div>';
 		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
 		$this->datatables->from(TABLE_INVOICES . ' as i');
 		$this->datatables->join(TABLE_CLIENTS . ' as cl', 'i.clientId = cl.id');

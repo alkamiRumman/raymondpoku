@@ -60,14 +60,13 @@ class Datatables
 						$col = $column;
 					}
 				}
-				// $this->extra["hghj"][] = $col;
-				//  $this->extra["io"][$i] = $_POST["mDataProp_$i"];
-				array_push($mDataProp, $col ? $col : $tempColumn);
+				$mDataProp[$i] = ($col ? $col : $tempColumn);
 			}
 		}
 		// $this->extra["hello"] = $columns;
 		$where = [];
 		for ($i = 0; $i < intval($_POST["iColumns"]); $i++) {
+			if (!isset($mDataProp[$i])) continue;
 			if ($_POST["sSearch_$i"]) {
 				if (strpos($_POST["sSearch_$i"], "-yadcf_delim-") !== FALSE) {
 					$explode = explode("-yadcf_delim-", $_POST["sSearch_$i"]);
