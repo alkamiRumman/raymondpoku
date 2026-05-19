@@ -112,8 +112,51 @@
 											   max="<?= $data->total - $data->paidAmount ?>" name="paidAmount">
 									</th>
 								</tr>
+								<tr>
+									<th style="padding-top: 0;padding-bottom: 0;" class="text-end">Note (optional):</th>
+									<th style="padding-top: 0;padding-bottom: 0;" class="text-start pl-2">
+										<input type="text" name="payNote" class="form-control form-control-sm" placeholder="e.g. Cheque #1234">
+									</th>
+								</tr>
 								</tbody>
 							</table>
+						</div>
+					</div>
+					<hr>
+					<div class="row">
+						<div class="col-md-12">
+							<h6 class="fw-semibold mb-2">Payment History</h6>
+							<?php if (!empty($payments)): ?>
+							<div class="table-responsive mb-3">
+								<table class="table table-sm table-bordered" style="font-size:13px">
+									<thead class="table-light">
+									<tr>
+										<th>#</th>
+										<th>Date &amp; Time</th>
+										<th>Amount (CAD)</th>
+										<th>Note</th>
+									</tr>
+									</thead>
+									<tbody>
+									<?php foreach ($payments as $i => $p): ?>
+									<tr>
+										<td><?= $i + 1 ?></td>
+										<td><?= date('d M Y, g:i A', strtotime($p->paidAt)) ?></td>
+										<td class="text-success fw-semibold">$<?= number_format($p->amount, 2) ?></td>
+										<td><?= htmlspecialchars($p->note ?: '—') ?></td>
+									</tr>
+									<?php endforeach; ?>
+									<tr class="table-light fw-bold">
+										<td colspan="2" class="text-end">Total Paid</td>
+										<td class="text-success">$<?= number_format($data->paidAmount, 2) ?></td>
+										<td></td>
+									</tr>
+									</tbody>
+								</table>
+							</div>
+							<?php else: ?>
+							<p class="text-muted small mb-3">No payments recorded yet.</p>
+							<?php endif; ?>
 						</div>
 					</div>
 					<div class="row">

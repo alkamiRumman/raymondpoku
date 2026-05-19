@@ -117,17 +117,56 @@
 								</tfoot>
 							</table>
 						</div>
+				</div>
+			</div>
+			<?php if (!empty($payments)): ?>
+			<div class="row mt-3">
+				<div class="col-md-12">
+					<h6 class="fw-semibold mb-2">Payment History</h6>
+					<div class="table-responsive">
+						<table class="table table-sm table-bordered" style="font-size:13px">
+							<thead class="table-light">
+							<tr>
+								<th>#</th>
+								<th>Date &amp; Time</th>
+								<th>Amount (CAD)</th>
+								<th>Note</th>
+							</tr>
+							</thead>
+							<tbody>
+							<?php foreach ($payments as $i => $p): ?>
+							<tr>
+								<td><?= $i + 1 ?></td>
+								<td><?= date('d M Y, g:i A', strtotime($p->paidAt)) ?></td>
+								<td class="text-success fw-semibold">$<?= number_format($p->amount, 2) ?></td>
+								<td><?= htmlspecialchars($p->note ?: '—') ?></td>
+							</tr>
+							<?php endforeach; ?>
+							<tr class="table-light fw-bold">
+								<td colspan="2" class="text-end">Total Paid</td>
+								<td class="text-success">$<?= number_format($data->paidAmount, 2) ?></td>
+								<td></td>
+							</tr>
+							</tbody>
+						</table>
 					</div>
 				</div>
 			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-danger close">Close</button>
-				<button type="button" class="btn btn-primary printButton">Print</button>
-			</div>
+			<?php endif; ?>
+		</div>
+		<div class="modal-footer no-print">
+			<button type="button" class="btn btn-danger close">Close</button>
+			<button type="button" class="btn btn-primary printButton">Print</button>
 		</div>
 	</div>
 </div>
+</div>
 
+<style>
+	@media print {
+		.modal-header, .modal-footer, .no-print { display: none !important; }
+	}
+</style>
 <script>
 	$('.close').on('click', function () {
 		$("#remoteModal1").modal('hide');
@@ -142,91 +181,39 @@
                     <title>Print Invoice</title>
                     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0/css/bootstrap.min.css">
                     <style>
-                        .modal-body { padding: 20px; }
-                        h1, h2, h3, h4, h5, h6 {
-                            margin: 0;
-                            padding: 0;
-                        }
+                        body { padding: 20px; }
+                        h1, h2, h3, h4, h5, h6 { margin: 0; padding: 0; }
                         .table { width: 100%; max-width: 100%; margin-bottom: 1rem; background-color: transparent; }
                         .table th, .table td { padding-top: 0; padding-bottom: 0; vertical-align: top; border-top: 1px solid #dee2e6; }
                         .table thead th { vertical-align: bottom; text-align: left; background-color: #66D1D1; }
                         .table tbody + tbody { border-top: 2px solid #dee2e6; }
-                        .table .table { background-color: #fff; }
                         .table-sm th, .table-sm td { padding: 0.3rem; }
                         .table-bordered { border: 1px solid #dee2e6; }
                         .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
                         .table-bordered thead th, .table-bordered thead td { border-bottom-width: 2px; }
                         .table-borderless th, .table-borderless td, .table-borderless thead th, .table-borderless tbody + tbody { border: 0; }
-                        .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0, 0, 0, 0.05); }
-                        .table-hover tbody tr:hover { background-color: rgba(0, 0, 0, 0.075); }
-                        .table-primary, .table-primary > th, .table-primary > td { background-color: #b8daff; }
-                        .table-hover .table-primary:hover { background-color: #9fcdff; }
-                        .table-hover .table-primary:hover > td, .table-hover .table-primary:hover > th { background-color: #9fcdff; }
+                        .table-light th, .table-light td { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .text-success { color: #198754 !important; }
                         .text-end { text-align: right; }
                         .text-start { text-align: left; }
+                        .fw-semibold { font-weight: 600; }
+                        .fw-bold { font-weight: 700; }
                         .pl-2 { padding-left: 0.5rem; }
                         .mb-3 { margin-bottom: 1rem; }
-                        .bg-info { background-color: #d1ecf1; }
+                        .mt-3 { margin-top: 1rem; }
+                        .bg-info { background-color: #d1ecf1; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                         .text-dark { color: #343a40; }
-
-                        /* Ensure footer only appears at the bottom of the final page */
-                        tfoot {
-                            display: table-row-group;
-                        }
-
-                        /* Prevent the footer from breaking across pages */
-                        tfoot tr {
-                            page-break-inside: avoid;
-                        }
-
+                        tfoot { display: table-row-group; }
+                        tfoot tr { page-break-inside: avoid; }
                         @media print {
-                            .row {
-                                display: flex;
-                                flex-wrap: nowrap;
-                            }
-                            .col-md-6 {
-                                flex: 0 0 auto;
-                                width: 50%;
-                            }
-                            .col-md-4 {
-                                flex: 0 0 auto;
-                                width: 33.333333%;
-                            }
-                            .col-md-5 {
-                                flex: 0 0 auto;
-                                width: 41.6666666667%;
-                            }
-                            .col-md-7 {
-                                flex: 0 0 auto;
-                                width: 58.3333333333%;
-                            }
-                            .col-md-8 {
-                                flex: 0 0 auto;
-                                width: 66.666667%;
-                            }
-                            .col-md-12 {
-                                flex: 0 0 auto;
-                                width: 100%;
-                            }
-
-                            /* Avoid page break inside rows */
-                            tr {
-                                page-break-inside: avoid;
-                            }
-
-                            /* Place footer at the bottom of the last page */
-                            .table-footer {
-								position: relative;
-								bottom: 0;
-								page-break-inside: avoid; /* Avoid breaking the footer between pages */
-							}
-
-							.table-footer::after {
-								content: '';
-								display: block;
-								height: 1px;
-								page-break-after: auto; /* Ensure it only appears on the last page */
-							}
+                            .row { display: flex; flex-wrap: nowrap; }
+                            .col-md-5  { flex: 0 0 auto; width: 41.6666666667%; }
+                            .col-md-6  { flex: 0 0 auto; width: 50%; }
+                            .col-md-7  { flex: 0 0 auto; width: 58.3333333333%; }
+                            .col-md-12 { flex: 0 0 auto; width: 100%; }
+                            tr { page-break-inside: avoid; }
+                            .table-footer { position: relative; bottom: 0; page-break-inside: avoid; }
+                            .table-footer::after { content: ''; display: block; height: 1px; page-break-after: auto; }
                         }
                     </style>
                 </head>

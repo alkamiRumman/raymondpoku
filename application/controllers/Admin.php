@@ -771,7 +771,7 @@ class Admin extends MY_Controller
 	{
 		$action = '<div class="d-flex gap-1 justify-content-center">'
 			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info px-2 py-1" title="Print"><i class="feather icon-printer"></i></a>'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info px-2 py-1" title="View"><i class="feather icon-eye"></i></a>'
 			. '</div>';
 		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
 		$this->datatables->from(TABLE_INVOICES . ' as i');
@@ -799,53 +799,63 @@ class Admin extends MY_Controller
 
 	function editInvoice($invoiceId)
 	{
-		$this->data['data'] = $this->admin->getInvoiceById($invoiceId);
+		$this->data['data']     = $this->admin->getInvoiceById($invoiceId);
 		$this->data['services'] = $this->admin->getServiceByInvoiceId($invoiceId);
+		$this->data['payments'] = $this->admin->getInvoicePayments($invoiceId);
 		$this->popupView('/editInvoice');
 	}
 
 	function printInvoice($invoiceId)
 	{
-		$this->data['data'] = $this->admin->getInvoiceById($invoiceId);
+		$this->data['data']     = $this->admin->getInvoiceById($invoiceId);
 		$this->data['services'] = $this->admin->getServiceByInvoiceId($invoiceId);
+		$this->data['payments'] = $this->admin->getInvoicePayments($invoiceId);
 		$this->popupView('/printInvoice');
 	}
 
 	function payInvoice($invoiceId)
 	{
-		$this->data['data'] = $this->admin->getInvoiceById($invoiceId);
+		$this->data['data']     = $this->admin->getInvoiceById($invoiceId);
+		$this->data['payments'] = $this->admin->getInvoicePayments($invoiceId);
 		$this->popupView('/payInvoice');
 	}
 
 	function savePay($id)
 	{
-//		return dnp($_POST);
-		$arr['title'] = $this->input->post('title');
-		$arr['poNumber'] = $this->input->post('poNumber');
+		$arr['title']         = $this->input->post('title');
+		$arr['poNumber']      = $this->input->post('poNumber');
 		$arr['taxPercentage'] = $this->input->post('taxPercentage');
-		$arr['taxAmount'] = $this->input->post('taxAmount');
-		$arr['invoiceDate'] = date('Y-m-d', strtotime($this->input->post('invoiceDate')));
-		$arr['dueDate'] = date('Y-m-d', strtotime($this->input->post('dueDate')));
-		$clientId = $this->input->post('clientId');
-		$total = $arr['total'] = $this->input->post('total');
-		$paidAmount = $this->input->post('paidAmount') ? $this->input->post('paidAmount') : 0;
-		$invoice = $this->admin->getInvoiceById($id);
-		$arr['paidAmount'] = $invoice->paidAmount + $paidAmount;
-		$arr['dueAmount'] = number_format(($total - $arr['paidAmount']), 2);
+		$arr['taxAmount']     = $this->input->post('taxAmount');
+		$arr['invoiceDate']   = date('Y-m-d', strtotime($this->input->post('invoiceDate')));
+		$arr['dueDate']       = date('Y-m-d', strtotime($this->input->post('dueDate')));
+		$clientId             = $this->input->post('clientId');
+		$total                = $arr['total'] = $this->input->post('total');
+		$paidAmount           = $this->input->post('paidAmount') ? $this->input->post('paidAmount') : 0;
+		$invoice              = $this->admin->getInvoiceById($id);
+		$arr['paidAmount']    = $invoice->paidAmount + $paidAmount;
+		$arr['dueAmount']     = number_format(($total - $arr['paidAmount']), 2);
 		if ($total == $arr['paidAmount']) {
 			$arr['status'] = 'Fully Paid';
 		}
 		if ($total > $arr['paidAmount'] && $arr['paidAmount'] != 0) {
 			$arr['status'] = 'Partial Paid';
 		}
-		$ar['updateAt'] = $arr['updateAt'] = date('Y-m-d H:i:s');
-		$client = $this->admin->getClientsById($clientId);
-		$ar['totalPaid'] = $client->totalPaid + $paidAmount;
-		$ar['outstanding'] = $client->totalBilled - $ar['totalPaid'];
-//		return dnp($aer);
+		$now = date('Y-m-d H:i:s');
+		$ar['updateAt'] = $arr['updateAt'] = $now;
+		$client              = $this->admin->getClientsById($clientId);
+		$ar['totalPaid']     = $client->totalPaid + $paidAmount;
+		$ar['outstanding']   = $client->totalBilled - $ar['totalPaid'];
 		$this->admin->updateInvoice($arr, $id);
 		$this->admin->updateClients($ar, $clientId);
-		$this->session->set_flashdata('success', 'Invoice Paid Successfully.');
+		if ($paidAmount > 0) {
+			$this->admin->saveInvoicePayment([
+				'invoiceId' => $id,
+				'amount'    => $paidAmount,
+				'note'      => $this->input->post('payNote'),
+				'paidAt'    => $now,
+			]);
+		}
+		$this->session->set_flashdata('success', 'Invoice updated successfully.');
 		redirect($_SERVER['HTTP_REFERER']);
 	}
 

@@ -95,7 +95,7 @@
 	function makeInvoiceAoColumns() {
 		return [
 			{mData: "actions", bSortable: false},
-			{mData: "invoiceDate"}, {mData: "name"}, {mData: "billingAddress"}, {mData: "phone"}, {mData: "totalHours"},
+			{mData: "invoiceDate"}, {mData: "name", bSortable: false}, {mData: "billingAddress"}, {mData: "phone"}, {mData: "totalHours"},
 			{mData: "total"}, {mData: "paidAmount"}, {mData: "dueAmount"}, {mData: "status"}
 		];
 	}
@@ -109,6 +109,30 @@
 			scrollY: '65vh',
 			scrollCollapse: true,
 			fixedColumns: { leftColumns: 2 },
+			initComplete: function () {
+				var state = Table.state.loaded();
+				Table.columns().every(function (index) {
+					var col = this;
+					var title = $('#reportTable thead th').eq(index).text();
+					var header = $(col.header());
+
+					if (index === 2) {
+						header.html(title + '<br><input type="text" placeholder="Search here..." style="font-weight:normal;" />');
+						var input = $('input', header);
+
+						input.on('keyup change', function () {
+							col.search(this.value).draw();
+						});
+
+						if (state) {
+							var colSearch = state.columns[index].search.search;
+							if (colSearch) input.val(colSearch);
+						}
+					} else {
+						header.text(title);
+					}
+				});
+			},
 			"columnDefs": makeInvoiceColumnDefs(),
 			'aoColumns': makeInvoiceAoColumns(),
 			"aLengthMenu": [[25, 50, 100, 200, 500, -1], [25, 50, 100, 200, 500, 'All']],

@@ -411,4 +411,18 @@ class Admin_model extends CI_Model
 		$this->db->order_by('invoiceDate', 'ASC');
 		return $this->db->get()->result();
 	}
+
+	function saveInvoicePayment($arr)
+	{
+		$this->db->insert(TABLE_INVOICE_PAYMENTS, $arr);
+	}
+
+	function getInvoicePayments($invoiceId)
+	{
+		$this->db->select('*');
+		$this->db->from(TABLE_INVOICE_PAYMENTS);
+		$this->db->where('invoiceId', $invoiceId);
+		$this->db->order_by('paidAt', 'ASC');
+		return $this->db->get()->result();
+	}
 }
