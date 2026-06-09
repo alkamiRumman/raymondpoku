@@ -1,5 +1,4 @@
-<div class="modal fade" id="remoteModal1" role="dialog" aria-hidden="true" data-backdrop="static"
-	 data-keyboard="false"></div>
+<div class="modal fade" id="remoteModal1" role="dialog" aria-hidden="true"></div>
 <footer class="footer d-flex flex-column flex-md-row align-items-center justify-content-between px-4 py-3 border-top small">
 	<p class="text-muted mb-1 mb-md-0">Copyright © 2024 <a href="https://thetradingjournal.io"><?= COMPANY ?></a>.
 	</p>

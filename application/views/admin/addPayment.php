@@ -61,7 +61,10 @@
 
 					<!-- Invoice allocation table (populated via AJAX) -->
 					<div id="invoiceSection" style="display:none;">
-						<h6 class="fw-semibold mb-2">Apply to Invoices</h6>
+						<div class="d-flex justify-content-between align-items-center mb-2">
+							<h6 class="fw-semibold mb-0">Apply to Invoices</h6>
+							<button type="button" id="selectAllInvoices" class="btn btn-xs btn-outline-secondary">Select All</button>
+						</div>
 						<p class="text-muted small mb-2">Check each invoice you want to apply this payment to and enter the amount.</p>
 						<div class="table-responsive">
 							<table class="table table-sm table-bordered" id="invoiceTable">
@@ -77,6 +80,12 @@
 								</thead>
 								<tbody id="invoiceRows"></tbody>
 							</table>
+						</div>
+						<div id="allocationSummary" class="d-none mt-2 px-3 py-2 rounded" style="background:#EFF6FF;border:1px solid #BFDBFE;font-size:13px;">
+							<span class="text-muted me-3">Selected: <strong id="sumCount">0</strong> invoice(s)</span>
+							<span class="text-muted me-3">Subtotal: <strong id="sumSubtotal">$0.00</strong></span>
+							<span class="text-muted me-3">Tax: <strong id="sumTax">$0.00</strong></span>
+							<span style="color:#2563EB;font-weight:600;">Total: <strong id="sumTotal">$0.00</strong></span>
 						</div>
 					</div>
 
@@ -156,13 +165,17 @@ $(document).ready(function () {
 
 	$(document).on('input', '.inv-amount', function () { recalcTotals(); });
 
-	$('#taxPercentage').on('input', function () {
-		var pct   = parseFloat($(this).val()) || 0;
-		var pre   = preAppliedTotal();
-		var tax   = pre * pct / 100;
-		$('#taxAmount').val(tax.toFixed(2));
-		$('#totalAmount').val((pre + tax).toFixed(2));
-		$('#savePaymentBtn').prop('disabled', pre <= 0);
+	$('#taxPercentage').on('input', function () { recalcTotals(); });
+
+	$('#selectAllInvoices').on('click', function () {
+		var allChecked = $('.inv-check:not(:checked)').length === 0;
+		$('.inv-check').each(function () {
+			$(this).prop('checked', !allChecked);
+			$(this).closest('tr').find('.inv-amount').prop('disabled', allChecked)
+				.val($(this).data('balance'));
+		});
+		$(this).text(allChecked ? 'Select All' : 'Deselect All');
+		recalcTotals();
 	});
 
 	function preAppliedTotal() {
@@ -175,12 +188,24 @@ $(document).ready(function () {
 	}
 
 	function recalcTotals() {
-		var pre = preAppliedTotal();
-		var pct = parseFloat($('#taxPercentage').val()) || 0;
-		var tax = pre * pct / 100;
+		var pre   = preAppliedTotal();
+		var pct   = parseFloat($('#taxPercentage').val()) || 0;
+		var tax   = pre * pct / 100;
+		var total = pre + tax;
 		$('#taxAmount').val(tax > 0 ? tax.toFixed(2) : '');
-		$('#totalAmount').val(pre > 0 ? (pre + tax).toFixed(2) : '');
+		$('#totalAmount').val(pre > 0 ? total.toFixed(2) : '');
 		$('#savePaymentBtn').prop('disabled', pre <= 0);
+
+		var count = $('.inv-check:checked').length;
+		if (count > 0) {
+			$('#sumCount').text(count);
+			$('#sumSubtotal').text('$' + pre.toFixed(2));
+			$('#sumTax').text('$' + tax.toFixed(2));
+			$('#sumTotal').text('$' + total.toFixed(2));
+			$('#allocationSummary').removeClass('d-none');
+		} else {
+			$('#allocationSummary').addClass('d-none');
+		}
 	}
 });
 </script>

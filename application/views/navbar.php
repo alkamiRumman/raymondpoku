@@ -12,11 +12,12 @@
 			</div>
 		</div>
 		<div class="sidebar-body">
+			<?php $nav = isset($active_nav) ? $active_nav : ''; ?>
 			<ul class="nav">
 				<?php if (isAdmin()) { ?>
 					<li class="nav-item nav-category">Main</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('index') ?>" class="nav-link">
+						<a href="<?= admin_url('index') ?>" class="nav-link <?= ($nav === 'index' || $nav === '') ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="grid"></i>
 							<span class="link-title">Dashboard</span>
 						</a>
@@ -24,13 +25,13 @@
 
 					<li class="nav-item nav-category">People</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('caregivers') ?>" class="nav-link">
+						<a href="<?= admin_url('caregivers') ?>" class="nav-link <?= $nav === 'caregivers' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="heart"></i>
 							<span class="link-title">Caregivers</span>
 						</a>
 					</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('clients') ?>" class="nav-link">
+						<a href="<?= admin_url('clients') ?>" class="nav-link <?= $nav === 'clients' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="users"></i>
 							<span class="link-title">Clients</span>
 						</a>
@@ -38,25 +39,25 @@
 
 					<li class="nav-item nav-category">Scheduling</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('services') ?>" class="nav-link">
+						<a href="<?= admin_url('services') ?>" class="nav-link <?= $nav === 'services' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="clipboard"></i>
 							<span class="link-title">Services</span>
 						</a>
 					</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('calendar') ?>" class="nav-link">
+						<a href="<?= admin_url('calendar') ?>" class="nav-link <?= $nav === 'calendar' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="calendar"></i>
 							<span class="link-title">Client Calendar</span>
 						</a>
 					</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('caregiverCalendar') ?>" class="nav-link">
+						<a href="<?= admin_url('caregiverCalendar') ?>" class="nav-link <?= $nav === 'caregiverCalendar' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="printer"></i>
 							<span class="link-title">Caregiver Calendar</span>
 						</a>
 					</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('caregiverWeekly') ?>" class="nav-link">
+						<a href="<?= admin_url('caregiverWeekly') ?>" class="nav-link <?= $nav === 'caregiverWeekly' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="clock"></i>
 							<span class="link-title">Payroll Hours</span>
 						</a>
@@ -64,19 +65,19 @@
 
 					<li class="nav-item nav-category">Billing</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('generateInvoice') ?>" class="nav-link">
+						<a href="<?= admin_url('generateInvoice') ?>" class="nav-link <?= $nav === 'generateInvoice' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="file-plus"></i>
 							<span class="link-title">Generate Invoice</span>
 						</a>
 					</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('invoice') ?>" class="nav-link">
+						<a href="<?= admin_url('invoice') ?>" class="nav-link <?= $nav === 'invoice' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="dollar-sign"></i>
 							<span class="link-title">Invoices</span>
 						</a>
 					</li>
 					<li class="nav-item">
-						<a href="<?= admin_url('payments') ?>" class="nav-link">
+						<a href="<?= admin_url('payments') ?>" class="nav-link <?= $nav === 'payments' ? 'active' : '' ?>">
 							<i class="link-icon" data-feather="credit-card"></i>
 							<span class="link-title">Payments</span>
 						</a>

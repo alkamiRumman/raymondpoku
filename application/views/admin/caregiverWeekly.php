@@ -26,7 +26,10 @@
 				</div>
 				<div class="row">
 					<div class="col-md-12 text-center mb-3">
-						<button type="button" id="search" class="btn btn-sm btn-info">Search</button>
+						<button type="button" id="search" class="btn btn-sm btn-info me-2">Search</button>
+						<button type="button" id="exportCsv" class="btn btn-sm btn-outline-secondary" style="display:none">
+							<i data-feather="download" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>Export CSV
+						</button>
 					</div>
 				</div>
 				<div class="table-responsive">
@@ -160,7 +163,34 @@
 						console.log(result);
 					}
 				});
+				$('#exportCsv').show();
+				if (window.feather) feather.replace();
 			}
+		});
+
+		$('#exportCsv').on('click', function () {
+			var rows = [];
+			var headers = [];
+			$('#headerRow th').each(function () { headers.push($(this).text().trim()); });
+			rows.push(headers);
+			$('#tableBody tr').each(function () {
+				var cells = [];
+				$(this).find('td, th').each(function () {
+					var txt = $(this).text().replace(/\s+/g, ' ').trim();
+					cells.push('"' + txt.replace(/"/g, '""') + '"');
+				});
+				rows.push(cells);
+			});
+			var csv = rows.map(function (r) { return r.join(','); }).join('\n');
+			var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+			var url  = URL.createObjectURL(blob);
+			var a    = document.createElement('a');
+			a.href = url;
+			a.download = 'PayrollHours_' + $('#startDate').val().replace(/ /g, '_') + '_to_' + $('#endDate').val().replace(/ /g, '_') + '.csv';
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
 		});
 	});
 </script>

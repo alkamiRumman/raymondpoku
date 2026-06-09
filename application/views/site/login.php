@@ -71,15 +71,6 @@
 			font-weight: 600;
 		}
 
-		.demo-user {
-			cursor: pointer;
-			transition: .2s;
-		}
-
-		.demo-user:hover {
-			background: #f1f5f9;
-		}
-
 		.password-wrapper {
 			position: relative;
 		}
@@ -133,44 +124,35 @@
 				<form method="post" action="<?= login_url('verify') ?>">
 
 					<div class="mb-3">
-						<label>Email</label>
+						<label for="username">Email</label>
 						<input type="email"
 							   id="username"
 							   name="username"
 							   class="form-control"
 							   placeholder="admin@example.com"
+							   autocomplete="email"
 							   required>
 					</div>
 
 					<div class="mb-4">
-						<label>Password</label>
+						<label for="password">Password</label>
 						<div class="password-wrapper">
 							<input type="password"
 								   id="password"
 								   name="password"
 								   class="form-control"
 								   placeholder="••••••••"
+								   autocomplete="current-password"
 								   required>
 							<i data-feather="eye" class="password-toggle" id="togglePassword"></i>
 						</div>
 					</div>
 
-					<button class="btn btn-primary w-100 btn-login">
+					<button type="submit" class="btn btn-primary w-100 btn-login">
 						Login
 					</button>
 				</form>
 
-				<hr class="my-4">
-
-				<p class="text-muted small mb-2">Quick Demo Login</p>
-
-				<table class="table table-bordered">
-					<tr class="demo-user" id="admin">
-						<td>admin@admin.com</td>
-						<td>123</td>
-						<td>Admin</td>
-					</tr>
-				</table>
 
 			</div>
 		</div>
@@ -186,11 +168,6 @@
 
 <script>
 	feather.replace();
-
-	$('#admin').click(function () {
-		$('#username').val('admin@admin.com');
-		$('#password').val('123');
-	});
 
 	$('#togglePassword').click(function () {
 		let input = $('#password');

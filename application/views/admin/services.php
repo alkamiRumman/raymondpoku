@@ -103,12 +103,12 @@
 				{
 					"render": function (data, type, row) {
 						var badges = {
-							'scheduled':         '<span class="badge bg-primary">Scheduled</span>',
-							'complete':          '<span class="badge bg-success">Complete</span>',
-							'cancelled':         '<span class="badge bg-secondary">Cancelled</span>',
-							'late_cancellation': '<span class="badge bg-warning text-dark">Late Cancellation</span>'
+							'scheduled':         '<span class="badge-status badge-scheduled">Scheduled</span>',
+							'complete':          '<span class="badge-status badge-complete">Complete</span>',
+							'cancelled':         '<span class="badge-status badge-cancelled">Cancelled</span>',
+							'late_cancellation': '<span class="badge-status badge-late-cancel">Late Cancellation</span>'
 						};
-						return badges[data] || '<span class="badge bg-light text-dark">' + data + '</span>';
+						return badges[data] || '<span class="badge-status badge-archived">' + data + '</span>';
 					}, "targets": 7
 				},
 				{
@@ -181,7 +181,8 @@
 				"iDisplayLength": 15,
 				'bProcessing': true,
 				"language": {
-					processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>'
+					processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>',
+					emptyTable: 'No services found for the selected date range.'
 				},
 				'bServerSide': true,
 				'sAjaxSource': ajaxSource,
@@ -203,7 +204,9 @@
 					});
 				},
 				"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {},
-				"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {},
+				"fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+					if (aData.status) { $(nRow).attr('data-status', aData.status); }
+				},
 				buttons: [
 					{
 						extend: 'colvis',

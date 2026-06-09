@@ -26,6 +26,8 @@ class Admin extends MY_Controller
 		$this->data['totalAmountWeek'] = $this->admin->getTotalAmountWeek()->totalAmount;
 		$this->data['billedAmountToday'] = $this->admin->getBilledAmountToday()->billAmount;
 		$this->data['billedAmountWeek'] = $this->admin->getBilledAmountWeek()->billAmount;
+		$outstandingRow = $this->db->query("SELECT COALESCE(SUM(dueAmount),0) AS totalOutstanding FROM invoices WHERE status != 'Fully Paid'")->row();
+		$this->data['totalOutstanding'] = $outstandingRow ? $outstandingRow->totalOutstanding : 0;
 		$this->data['scheduledHours'] = json_encode($this->admin->getScheduledHourDashboard());
 		$this->data['invoiceData'] = json_encode($this->admin->getInvoiceData());
 
@@ -131,7 +133,8 @@ class Admin extends MY_Controller
 	function getCaregivers()
 	{
 		$action = '<div class="d-flex gap-1 justify-content-center">'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editCaregiver/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editCaregiver/$1') . '\')" class="btn btn-xs btn-primary px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<a href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-archive\', \'' . base_url('admin/changeStatus/$1') . '\')" class="btn btn-xs btn-outline-warning px-2 py-1" title="Archive"><i class="feather icon-archive"></i></a>'
 			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteCaregivers/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
 			. '</div>';
 		$this->datatables->select('id, firstName, lastName, address, phone, email, sin, dateOfBirth, hiringDate, baseRate, position, notes, status, createAt, updateAt');
@@ -238,8 +241,9 @@ class Admin extends MY_Controller
 	function getClients()
 	{
 		$action = '<div class="d-flex gap-1 justify-content-center">'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
-			. '<a href="' . base_url('admin/clientStatement/$1') . '" class="btn btn-xs btn-info px-2 py-1" title="Statement"><i class="feather icon-file-text"></i></a>'
+			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')" class="btn btn-xs btn-primary px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
+			. '<a href="' . base_url('admin/clientStatement/$1') . '" class="btn btn-xs btn-outline-info px-2 py-1" title="Statement"><i class="feather icon-file-text"></i></a>'
+			. '<a href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-archive\', \'' . base_url('admin/changeClientStatus/$1') . '\')" class="btn btn-xs btn-outline-warning px-2 py-1" title="Archive"><i class="feather icon-archive"></i></a>'
 			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteClients/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
 			. '</div>';
 		$this->datatables->select('c.id as id, c.name, c.address, c.phone, c.dol, c.referralSource, c.budget, c.referralDate, c.billingAddress, c.companyName, c.adjustorName, c.adjustorEmail, c.adjustorPhone, c.adjustorFax, c.billRate, c.budgetedHours, c.status, COALESCE(SUM(i.total),0) as totalBilled, COALESCE(SUM(i.paidAmount),0) as totalPaid, COALESCE(SUM(i.dueAmount),0) as outstanding, c.createAt, c.updateAt');

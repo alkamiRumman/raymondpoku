@@ -20,6 +20,9 @@ class MY_Controller extends CI_Controller
 
 	public function makeView($view)
 	{
+		if (!isset($this->data['active_nav'])) {
+			$this->data['active_nav'] = $this->uri->segment(2, 'index');
+		}
 		$this->load->view("header", $this->data);
 		$this->load->view("navbar", $this->data);
 		$this->load->view($this->path . $view, $this->data);

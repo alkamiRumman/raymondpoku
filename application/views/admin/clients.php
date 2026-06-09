@@ -81,8 +81,7 @@
 				},
 				{
 					"render": function (data, type, row) {
-						return '<a onclick="showSwal(\'passing-parameter-execute-archive\', \'' + '<?php echo base_url('admin/changeClientStatus/'); ?>' + row['id'] + '\')">' +
-							'<button class="btn btn-xs btn-success text-white">Active</button></a>';
+						return '<span class="badge-status badge-active">Active</span>';
 					},
 					"targets": 21
 				}
@@ -99,7 +98,8 @@
 			"iDisplayLength": 25,
 			'bProcessing': true,
 			"language": {
-				processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>'
+				processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>',
+				emptyTable: 'No active clients found.'
 			},
 			'bServerSide': true,
 			'sAjaxSource': '<?= admin_url('getClients') ?>',

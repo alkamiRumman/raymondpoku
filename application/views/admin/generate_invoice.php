@@ -46,7 +46,7 @@
 			<tr>
 				<th style="padding-top: 0;padding-bottom: 0" class="text-end">Payment Due:</th>
 				<td style="padding-top: 0;padding-bottom: 0" class="text-start pl-2">
-					<input type="date" id="dueDate" name="dueDate">
+					<input type="text" id="dueDate" name="dueDate">
 				</td>
 			</tr>
 			<tr>
@@ -60,7 +60,7 @@
 			<tr>
 				<th style="padding-top: 0;padding-bottom: 0;" class="text-end">Tax (%):</th>
 				<th style="padding-top: 0;padding-bottom: 0;" class="text-start pl-2">
-					<input type="number" step="any" min="0" name="taxPercentage" placeholder="(%)" id="taxPercentage" value="13"></th>
+					<input type="number" step="0.01" min="0" name="taxPercentage" placeholder="(%)" id="taxPercentage" value="13"></th>
 			</tr>
 			<tr>
 				<th style="padding-top: 0;padding-bottom: 0;" class="text-end">Tax (HST):</th>
@@ -121,10 +121,15 @@
 </div>
 <script>
 	$(document).ready(function () {
-		$("#dueDate, #invoiceDate").flatpickr({
+		$("#invoiceDate").flatpickr({
 			static: true,
-			defaultDate: "today",
-			dateFormat: "d M Y",
+			defaultDate: 'today',
+			dateFormat: 'd M Y',
+		});
+		$("#dueDate").flatpickr({
+			static: true,
+			defaultDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			dateFormat: 'd M Y',
 		});
 		$('#taxPercentage').trigger('input');
 	});

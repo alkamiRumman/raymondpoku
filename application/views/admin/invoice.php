@@ -78,15 +78,12 @@
 			},
 			{
 				"render": function (data, type, row) {
-					if (data == 'Sent') {
-						return '<span class="badge bg-warning text-dark">Sent</span>';
-					} else if (data == 'Partial Paid') {
-						return '<span class="badge bg-info text-dark">Partial Paid</span>';
-					} else if (data == 'Fully Paid') {
-						return '<span class="badge bg-success text-light">Fully Paid</span>';
-					} else {
-						return '<span class="badge bg-danger text-dark">' + data + '</span>';
-					}
+					var map = {
+						'Sent':         '<span class="badge-status badge-sent">Sent</span>',
+						'Partial Paid': '<span class="badge-status badge-partial">Partial Paid</span>',
+						'Fully Paid':   '<span class="badge-status badge-paid">Fully Paid</span>'
+					};
+					return map[data] || '<span class="badge-status badge-archived">' + data + '</span>';
 				}, "targets": 9
 			}
 		];
@@ -139,7 +136,8 @@
 			"iDisplayLength": 25,
 			'bProcessing': true,
 			"language": {
-				processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>'
+				processing: '<div><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading Please Wait...</span></div>',
+				emptyTable: 'No invoices found.'
 			},
 			'bServerSide': true,
 			'sAjaxSource': ajaxSource,

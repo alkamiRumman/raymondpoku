@@ -107,7 +107,18 @@ if ($hour >= 17) $greeting = 'Good evening';
 <!-- ═══════════════════════════════════════════════════
      KPI GRID — ROW 2: FINANCIALS
 ════════════════════════════════════════════════════ -->
-<div class="kpi-grid mb-4">
+<div class="kpi-grid kpi-grid-5 mb-4">
+
+	<div class="kpi-card-v2">
+		<div class="kpi-icon-wrap" style="background:#FEF2F2">
+			<i data-feather="alert-circle" style="color:#DC2626;width:20px;height:20px"></i>
+		</div>
+		<div class="kpi-body">
+			<span class="kpi-label-v2">Outstanding Balance</span>
+			<span class="kpi-value-v2" style="color:#DC2626">$<?= number_format((float)($totalOutstanding ?: 0), 0) ?></span>
+		</div>
+		<div class="kpi-bar" style="background:#DC2626"></div>
+	</div>
 
 	<div class="kpi-card-v2">
 		<div class="kpi-icon-wrap" style="background:#F5F3FF">
@@ -368,8 +379,10 @@ if ($hour >= 17) $greeting = 'Good evening';
 	grid-template-columns: repeat(4, 1fr);
 	gap: 14px;
 }
-@media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 576px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+.kpi-grid-5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1200px) { .kpi-grid-5 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 992px)  { .kpi-grid, .kpi-grid-5 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 576px)  { .kpi-grid, .kpi-grid-5 { grid-template-columns: repeat(2, 1fr); } }
 
 .kpi-card-v2 {
 	background: #fff;
@@ -631,5 +644,8 @@ $(function () {
 			hoursChart.update();
 		});
 	});
+
+	/* Auto-refresh KPI values every 5 minutes */
+	setTimeout(function () { location.reload(); }, 5 * 60 * 1000);
 });
 </script>

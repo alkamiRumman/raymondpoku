@@ -102,22 +102,6 @@
 											   value="<?= $data->total - $data->paidAmount ?>" readonly>
 									</th>
 								</tr>
-								<tr>
-									<th style="padding-top: 0;padding-bottom: 0;" class="text-end">Pay
-										Amount (CAD):
-									</th>
-									<th style="padding-top: 0;padding-bottom: 0;"
-										class="text-start pl-2">
-										<input type="number" step="any" min="0"
-											   max="<?= $data->total - $data->paidAmount ?>" name="paidAmount">
-									</th>
-								</tr>
-								<tr>
-									<th style="padding-top: 0;padding-bottom: 0;" class="text-end">Note (optional):</th>
-									<th style="padding-top: 0;padding-bottom: 0;" class="text-start pl-2">
-										<input type="text" name="payNote" class="form-control form-control-sm" placeholder="e.g. Cheque #1234">
-									</th>
-								</tr>
 								</tbody>
 							</table>
 						</div>
@@ -194,9 +178,17 @@
 						</div>
 					</div>
 				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-danger close">Close</button>
-					<button type="submit" class="btn btn-info me-2">Update</button>
+				<div class="modal-footer d-flex justify-content-between">
+					<a href="javascript:void(0);"
+					   onclick="$('#remoteModal1').modal('hide'); setTimeout(function(){ loadPopup('<?= admin_url('addPayment') ?>'); }, 300);"
+					   class="btn btn-outline-info btn-sm">
+						<i data-feather="plus-circle" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+						Record Payment
+					</a>
+					<div>
+						<button type="button" class="btn btn-secondary close me-2">Close</button>
+						<button type="submit" class="btn btn-primary">Update Invoice</button>
+					</div>
 				</div>
 			</form>
 		</div>

@@ -148,11 +148,20 @@ document.addEventListener('DOMContentLoaded', function () {
 			viewDidMount: function () { userChangedView = false; },
 			dateClick: function (info) {
 				var clientId = $('#clientIdCalendar').val();
-				if (clientId) {
-					loadPopup('<?= admin_url('addServiceFromCalendar/') ?>' + clientId + '/' + info.dateStr);
-				} else {
-					Toast.fire({ icon: 'warning', title: 'Select a client first!' });
-				}
+				if (!clientId) { Toast.fire({ icon: 'warning', title: 'Select a client first!' }); return; }
+				Swal.fire({
+					title: 'Add Service',
+					html: 'Add a service on <strong>' + moment(info.dateStr).format('DD MMM YYYY') + '</strong>?',
+					icon: 'question',
+					showCancelButton: true,
+					confirmButtonText: 'Add Service',
+					cancelButtonText: 'Cancel',
+					confirmButtonColor: '#2563EB'
+				}).then(function (result) {
+					if (result.isConfirmed) {
+						loadPopup('<?= admin_url('addServiceFromCalendar/') ?>' + clientId + '/' + info.dateStr);
+					}
+				});
 			},
 			datesSet: function (info) {
 				var d = new Date(info.view.activeStart);
