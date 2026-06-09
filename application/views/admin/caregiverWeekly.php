@@ -102,30 +102,59 @@
 						});
 
 						// Add rows for each client and calculate total hours
-						var totalHours = {};
+						var totalPayable = {};
+						var totalCancelled = {};
+						var totalLateCancel = {};
 						Object.keys(clients).forEach(function (clientName) {
 							var row = '<tr>';
 							row += '<td>' + clientName + '</td>';
 							Object.keys(caregiverMap).forEach(function (caregiverName, index) {
-								var caregiverData = clients[clientName].find(client => (client.firstName + ' ' + (client.lastName ? client.lastName : '')) === caregiverName);
-								var hours = caregiverData ? parseFloat(caregiverData.totalHours) : 0;
-								row += '<td>' + (hours || '-') + '</td>';
-								if (!totalHours[index]) {
-									totalHours[index] = 0;
-								}
-								totalHours[index] += hours;
+								var d = clients[clientName].find(function(c) {
+									return (c.firstName + ' ' + (c.lastName || '')) === caregiverName;
+								});
+								var payable    = d ? parseFloat(d.payableHours)    : 0;
+								var cancelled  = d ? parseFloat(d.cancelledHours)  : 0;
+								var lateCancel = d ? parseFloat(d.lateCancelHours) : 0;
+								if (!totalPayable[index])    totalPayable[index]    = 0;
+								if (!totalCancelled[index])  totalCancelled[index]  = 0;
+								if (!totalLateCancel[index]) totalLateCancel[index] = 0;
+								totalPayable[index]    += payable;
+								totalCancelled[index]  += cancelled;
+								totalLateCancel[index] += lateCancel;
+								var cell = payable ? '<strong>' + payable + '</strong>' : '-';
+								if (lateCancel > 0) cell += '<br><span class="text-warning" style="font-size:11px">Late Cancel: ' + lateCancel + ' hrs</span>';
+								if (cancelled  > 0) cell += '<br><span class="text-muted"  style="font-size:11px">Cancelled: '    + cancelled  + ' hrs</span>';
+								row += '<td>' + cell + '</td>';
 							});
 							row += '</tr>';
 							tableBody.append(row);
 						});
 
-						// Add total hours row
-						var totalRow = '<tr><th class="text-end">Total Hours</th>';
-						Object.keys(totalHours).forEach(function (index) {
-							totalRow += '<th>' + totalHours[index] + '</th>';
+						// Add total rows
+						var totalRow = '<tr class="table-light"><th class="text-end">Total Payable Hrs</th>';
+						Object.keys(totalPayable).forEach(function (index) {
+							totalRow += '<th>' + (totalPayable[index] || 0) + '</th>';
 						});
 						totalRow += '</tr>';
 						tableBody.append(totalRow);
+
+						if (Object.values(totalLateCancel).some(function(v){ return v > 0; })) {
+							var lateRow = '<tr class="table-warning"><th class="text-end" style="font-size:12px">Late Cancellations</th>';
+							Object.keys(totalLateCancel).forEach(function (index) {
+								lateRow += '<th style="font-size:12px">' + (totalLateCancel[index] || 0) + '</th>';
+							});
+							lateRow += '</tr>';
+							tableBody.append(lateRow);
+						}
+
+						if (Object.values(totalCancelled).some(function(v){ return v > 0; })) {
+							var cancelRow = '<tr class="table-secondary"><th class="text-end" style="font-size:12px">Cancelled (not paid)</th>';
+							Object.keys(totalCancelled).forEach(function (index) {
+								cancelRow += '<th style="font-size:12px">' + (totalCancelled[index] || 0) + '</th>';
+							});
+							cancelRow += '</tr>';
+							tableBody.append(cancelRow);
+						}
 					},
 					error: function (result) {
 						console.log(result);

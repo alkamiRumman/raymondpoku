@@ -204,6 +204,12 @@
 		};
 	}
 
+	function confirmDeleteInvoice(url) {
+		if (confirm('Delete this invoice? This cannot be undone. Services linked to it will be unlinked so they can be re-invoiced.')) {
+			window.location.href = url;
+		}
+	}
+
 	$(document).ready(function () {
 		$("#monthSearch, #yearSearch").on('change', function () {
 			var month = $('#monthSearch').find(":selected").val();

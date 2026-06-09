@@ -43,6 +43,12 @@
 				<td style="background-color:#fde047;color:#713f12;border-radius:4px">Travel/Transport</td>
 				<td style="background-color:#f0abfc;color:#701a75;border-radius:4px">Respite</td>
 			</tr>
+			<tr class="text-center">
+				<th class="text-start ps-0">Status Override</th>
+				<td style="background-color:#6b7280;color:#fff;border-radius:4px">Cancelled</td>
+				<td style="background-color:#f97316;color:#fff;border-radius:4px">Late Cancellation</td>
+				<td colspan="3"></td>
+			</tr>
 		</table>
 	</div>
 </div>
@@ -73,6 +79,13 @@ document.addEventListener('DOMContentLoaded', function () {
 		'Travel/Transport': '#fde047',
 		'Respite':        '#f0abfc',
 	};
+	var statusColors = {
+		'cancelled':         '#6b7280',
+		'late_cancellation': '#f97316',
+	};
+	function eventColor(e) {
+		return statusColors[e.status] || serviceTypeColors[e.serviceType] || '#94a3b8';
+	}
 
 	function formatTime(time) {
 		var parts = time.split(':');
@@ -197,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
 						end:             e.date,
 						allDay:          true,
 						title:           formatTime(e.startTime) + ' - ' + formatTime(e.endTime),
-						backgroundColor: serviceTypeColors[e.serviceType] || '#94a3b8',
+						backgroundColor: eventColor(e),
 						description:     e.firstName + ' ' + e.lastName
 					};
 				});
@@ -236,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
 							return {
 								id:              e.id, start: e.date, end: e.date, allDay: true,
 								title:           formatTime(e.startTime) + ' - ' + formatTime(e.endTime),
-								backgroundColor: serviceTypeColors[e.serviceType] || '#94a3b8',
+								backgroundColor: eventColor(e),
 								description:     e.firstName + ' ' + e.lastName
 							};
 						});

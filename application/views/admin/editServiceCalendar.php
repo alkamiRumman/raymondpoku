@@ -50,6 +50,16 @@
 								</option>
 							</select>
 						</div>
+						<div class="col-md-12 mb-3">
+							<label class="form-label">Status <sup class="text-danger">*</sup></label>
+							<input type="hidden" name="oldStatus" value="<?= $data->status ?>">
+							<select class="form-select" name="status" required>
+								<option value="scheduled" <?= $data->status == 'scheduled' ? 'selected' : '' ?>>Scheduled</option>
+								<option value="complete" <?= $data->status == 'complete' ? 'selected' : '' ?>>Complete</option>
+								<option value="cancelled" <?= $data->status == 'cancelled' ? 'selected' : '' ?>>Cancelled (not billed)</option>
+								<option value="late_cancellation" <?= $data->status == 'late_cancellation' ? 'selected' : '' ?>>Late Cancellation (billed)</option>
+							</select>
+						</div>
 					</div>
 					<div class="row">
 						<div class="col-md-6 mb-3">

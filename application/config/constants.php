@@ -90,6 +90,8 @@ defined('TABLE_CLIENTS') or define('TABLE_CLIENTS', "clients");
 defined('TABLE_SERVICES') or define('TABLE_SERVICES', "services");
 defined('TABLE_INVOICES') or define('TABLE_INVOICES', "invoices");
 defined('TABLE_INVOICE_PAYMENTS') or define('TABLE_INVOICE_PAYMENTS', "invoice_payments");
+defined('TABLE_PAYMENTS') or define('TABLE_PAYMENTS', "payments");
+defined('TABLE_PAYMENT_ITEMS') or define('TABLE_PAYMENT_ITEMS', "payment_items");
 
 define('COMPANY', 'Mayer Health Services');
 define('SHORTNAME', 'MHS');

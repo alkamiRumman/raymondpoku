@@ -38,6 +38,15 @@
 								<option value="Respite">Respite</option>
 							</select>
 						</div>
+						<div class="col-md-12 mb-3">
+							<label class="form-label">Status <sup class="text-danger">*</sup></label>
+							<select class="form-select" name="status" required>
+								<option value="scheduled" selected>Scheduled</option>
+								<option value="complete">Complete</option>
+								<option value="cancelled">Cancelled (not billed)</option>
+								<option value="late_cancellation">Late Cancellation (billed)</option>
+							</select>
+						</div>
 					</div>
 					<div class="row">
 						<div class="col-md-6 mb-3">

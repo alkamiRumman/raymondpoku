@@ -75,6 +75,12 @@
 							<span class="link-title">Invoices</span>
 						</a>
 					</li>
+					<li class="nav-item">
+						<a href="<?= admin_url('payments') ?>" class="nav-link">
+							<i class="link-icon" data-feather="credit-card"></i>
+							<span class="link-title">Payments</span>
+						</a>
+					</li>
 				<?php } ?>
 
 				<li class="nav-item nav-category">Account</li>

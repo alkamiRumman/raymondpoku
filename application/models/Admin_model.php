@@ -263,7 +263,7 @@ class Admin_model extends CI_Model
 
 	function getAllService($clientId)
 	{
-		$this->db->select('s.id, s.date, s.hours, s.startTime, s.endTime, s.serviceType, c.firstName, c.lastName');
+		$this->db->select('s.id, s.date, s.hours, s.startTime, s.endTime, s.serviceType, s.status, c.firstName, c.lastName');
 		$this->db->from(TABLE_SERVICES . ' as s');
 		$this->db->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
 		$this->db->where('s.clientId', $clientId);
@@ -327,15 +327,17 @@ class Admin_model extends CI_Model
 
 	function getCaregiverWeekly($start, $end)
 	{
-		$this->db->select('s.*, c.firstName, c.lastName, cl.name, SUM(amount) as totalAmount, SUM(hours) as totalHours');
-		$this->db->from(TABLE_SERVICES . ' as s');
-		$this->db->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
-		$this->db->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
-		$this->db->where('s.date >=', $start);
-		$this->db->where('s.date <=', $end);
-		$this->db->where(array('c.status' => 0, 'cl.status' => 0));
-		$this->db->group_by('s.caregiverId, s.clientId');
-		return $this->db->get()->result();
+		$sql = "SELECT c.firstName, c.lastName, cl.name, s.caregiverId, s.clientId,
+			SUM(CASE WHEN s.status IN ('scheduled','complete','late_cancellation') THEN s.hours ELSE 0 END) AS payableHours,
+			SUM(CASE WHEN s.status = 'late_cancellation' THEN s.hours ELSE 0 END) AS lateCancelHours,
+			SUM(CASE WHEN s.status = 'cancelled' THEN s.hours ELSE 0 END) AS cancelledHours,
+			SUM(CASE WHEN s.status IN ('scheduled','complete','late_cancellation') THEN s.amount ELSE 0 END) AS totalAmount
+			FROM " . TABLE_SERVICES . " s
+			JOIN " . TABLE_CAREGIVERS . " c ON s.caregiverId = c.id
+			JOIN " . TABLE_CLIENTS . " cl ON s.clientId = cl.id
+			WHERE s.date >= ? AND s.date <= ? AND c.status = 0 AND cl.status = 0
+			GROUP BY s.caregiverId, s.clientId";
+		return $this->db->query($sql, [$start, $end])->result();
 	}
 
 	function getYearsList()
@@ -424,5 +426,114 @@ class Admin_model extends CI_Model
 		$this->db->where('invoiceId', $invoiceId);
 		$this->db->order_by('paidAt', 'ASC');
 		return $this->db->get()->result();
+	}
+
+	function deleteInvoiceById($id)
+	{
+		$invoice = $this->getInvoiceById($id);
+		if (!$invoice) return;
+
+		// Reverse client paid amount
+		$client = $this->getClientsById($invoice->clientId);
+		$newPaid = max(0, $client->totalPaid - $invoice->paidAmount);
+		$this->db->update(TABLE_CLIENTS, [
+			'totalPaid'   => $newPaid,
+			'outstanding' => $client->totalBilled - $newPaid,
+		], ['id' => $invoice->clientId]);
+
+		// Unlink services so they can be re-invoiced
+		$this->db->update(TABLE_SERVICES, ['invoiceId' => null], ['invoiceId' => $id]);
+
+		// Delete payment records for this invoice
+		$this->db->delete(TABLE_INVOICE_PAYMENTS, ['invoiceId' => $id]);
+
+		// Delete payment_items referencing this invoice
+		$this->db->delete(TABLE_PAYMENT_ITEMS, ['invoiceId' => $id]);
+
+		$this->db->delete(TABLE_INVOICES, ['id' => $id]);
+	}
+
+	// --- Payments module ---
+
+	function savePayment($arr)
+	{
+		$this->db->insert(TABLE_PAYMENTS, $arr);
+		return $this->db->insert_id();
+	}
+
+	function savePaymentItem($arr)
+	{
+		$this->db->insert(TABLE_PAYMENT_ITEMS, $arr);
+	}
+
+	function getPayments()
+	{
+		$this->db->select('p.*, cl.name as clientName');
+		$this->db->from(TABLE_PAYMENTS . ' as p');
+		$this->db->join(TABLE_CLIENTS . ' as cl', 'p.clientId = cl.id');
+		$this->db->order_by('p.paymentDate', 'DESC');
+		return $this->db->get()->result();
+	}
+
+	function getPaymentById($id)
+	{
+		$this->db->select('p.*, cl.name as clientName');
+		$this->db->from(TABLE_PAYMENTS . ' as p');
+		$this->db->join(TABLE_CLIENTS . ' as cl', 'p.clientId = cl.id');
+		$this->db->where('p.id', $id);
+		return $this->db->get()->row();
+	}
+
+	function getPaymentItems($paymentId)
+	{
+		$this->db->select('pi.*, i.invoiceNumber, i.total as invoiceTotal, i.paidAmount as invoicePaid');
+		$this->db->from(TABLE_PAYMENT_ITEMS . ' as pi');
+		$this->db->join(TABLE_INVOICES . ' as i', 'pi.invoiceId = i.id');
+		$this->db->where('pi.paymentId', $paymentId);
+		return $this->db->get()->result();
+	}
+
+	function getUnpaidInvoicesByClient($clientId)
+	{
+		$this->db->select('id, invoiceNumber, invoiceDate, total, paidAmount, dueAmount, status');
+		$this->db->from(TABLE_INVOICES);
+		$this->db->where('clientId', $clientId);
+		$this->db->where('total > paidAmount');
+		$this->db->order_by('invoiceDate', 'ASC');
+		return $this->db->get()->result();
+	}
+
+	function deletePaymentById($id)
+	{
+		$payment  = $this->getPaymentById($id);
+		if (!$payment) return;
+
+		$items = $this->getPaymentItems($id);
+		foreach ($items as $item) {
+			$inv = $this->getInvoiceById($item->invoiceId);
+			if (!$inv) continue;
+
+			$newPaid = max(0, $inv->paidAmount - $item->amountApplied);
+			$newDue  = $inv->total - $newPaid;
+			$status  = $newPaid <= 0 ? 'Sent' : ($newDue > 0 ? 'Partial Paid' : 'Fully Paid');
+			$this->db->update(TABLE_INVOICES, [
+				'paidAmount' => $newPaid,
+				'dueAmount'  => $newDue,
+				'status'     => $status,
+			], ['id' => $item->invoiceId]);
+
+			$this->db->delete(TABLE_INVOICE_PAYMENTS, ['invoiceId' => $item->invoiceId, 'amount' => $item->amountApplied]);
+		}
+
+		// Reverse client totals
+		$client  = $this->getClientsById($payment->clientId);
+		$newPaid = max(0, $client->totalPaid - $payment->totalAmount);
+		$this->db->update(TABLE_CLIENTS, [
+			'totalPaid'   => $newPaid,
+			'outstanding' => $client->totalBilled - $newPaid,
+		], ['id' => $payment->clientId]);
+
+		$this->db->delete(TABLE_PAYMENT_ITEMS, ['paymentId' => $id]);
+		$this->db->delete(TABLE_PAYMENTS, ['id' => $id]);
 	}
 }

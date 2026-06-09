@@ -43,6 +43,7 @@
 						<th class="text-dark">Caregiver</th>
 						<th class="text-dark">Client</th>
 						<th class="text-dark">Service Type</th>
+						<th class="text-dark">Status</th>
 						<th class="text-dark">Employee Rate</th>
 						<th class="text-dark">Bill Rate</th>
 						<th class="text-dark">Hours</th>
@@ -101,11 +102,22 @@
 				},
 				{
 					"render": function (data, type, row) {
+						var badges = {
+							'scheduled':         '<span class="badge bg-primary">Scheduled</span>',
+							'complete':          '<span class="badge bg-success">Complete</span>',
+							'cancelled':         '<span class="badge bg-secondary">Cancelled</span>',
+							'late_cancellation': '<span class="badge bg-warning text-dark">Late Cancellation</span>'
+						};
+						return badges[data] || '<span class="badge bg-light text-dark">' + data + '</span>';
+					}, "targets": 7
+				},
+				{
+					"render": function (data, type, row) {
 						if (data == 0)
 							return data;
 						else
 							return '$' + data + '</span>';
-					}, "targets": [7, 8, 10, 11]
+					}, "targets": [8, 9, 11, 12]
 				},
 				{
 					"render": function (data, type, row) {
@@ -114,7 +126,7 @@
 						} else {
 							return '--';
 						}
-					}, "targets": 13, type: 'date'
+					}, "targets": 14, type: 'date'
 				}
 			];
 		}
@@ -123,7 +135,7 @@
 			return [
 				{mData: "actions", bSortable: false},
 				{mData: "date"}, {mData: "invoiceNumber"}, {mData: "startTime"}, {mData: "firstName"}, {mData: "name"},
-				{mData: "serviceType"}, {mData: "rate"}, {mData: "billRate"}, {mData: "hours"},
+				{mData: "serviceType"}, {mData: "status"}, {mData: "rate"}, {mData: "billRate"}, {mData: "hours"},
 				{mData: "amount"}, {mData: "billAmount"}, {mData: "comments"}, {mData: "updateAt"}
 			];
 		}

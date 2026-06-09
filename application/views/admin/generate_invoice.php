@@ -60,7 +60,7 @@
 			<tr>
 				<th style="padding-top: 0;padding-bottom: 0;" class="text-end">Tax (%):</th>
 				<th style="padding-top: 0;padding-bottom: 0;" class="text-start pl-2">
-					<input type="number" step="any" min="0" name="taxPercentage" placeholder="(%)" id="taxPercentage"></th>
+					<input type="number" step="any" min="0" name="taxPercentage" placeholder="(%)" id="taxPercentage" value="13"></th>
 			</tr>
 			<tr>
 				<th style="padding-top: 0;padding-bottom: 0;" class="text-end">Tax (HST):</th>
@@ -126,6 +126,7 @@
 			defaultDate: "today",
 			dateFormat: "d M Y",
 		});
+		$('#taxPercentage').trigger('input');
 	});
 
 	$('#taxPercentage').on('input', function () {

@@ -365,6 +365,7 @@ class Admin extends MY_Controller
 			$arr['caregiverId'] = $this->input->post('caregiverId');
 			$clientId = $arr['clientId'] = $this->input->post('clientId');
 			$arr['serviceType'] = $this->input->post('serviceType');
+			$arr['status'] = $this->input->post('status') ?: 'scheduled';
 			$arr['rate'] = $this->input->post('rate');
 			$arr['billRate'] = $this->input->post('billRate');
 			$arr['hours'] = $this->input->post('hours');
@@ -373,7 +374,8 @@ class Admin extends MY_Controller
 			$billAmount = $arr['billAmount'] = $this->input->post('billAmount');
 			$this->admin->saveService($arr);
 			$client = $this->admin->getClientsById($clientId);
-			$cl['totalBilled'] = $client->totalBilled + $billAmount;
+			$billable = ($arr['status'] !== 'cancelled') ? $billAmount : 0;
+			$cl['totalBilled'] = $client->totalBilled + $billable;
 			$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
 			$this->admin->updateClients($cl, $clientId);
 		}
@@ -389,6 +391,7 @@ class Admin extends MY_Controller
 		$arr['caregiverId'] = $this->input->post('caregiverId');
 		$clientId = $arr['clientId'] = $this->input->post('clientId');
 		$arr['serviceType'] = $this->input->post('serviceType');
+		$arr['status'] = $this->input->post('status') ?: 'scheduled';
 		$arr['rate'] = $this->input->post('rate');
 		$arr['billRate'] = $this->input->post('billRate');
 		$arr['hours'] = $this->input->post('hours');
@@ -397,7 +400,8 @@ class Admin extends MY_Controller
 		$billAmount = $arr['billAmount'] = $this->input->post('billAmount');
 		$eventId = $this->admin->saveService($arr);
 		$client = $this->admin->getClientsById($clientId);
-		$cl['totalBilled'] = $client->totalBilled + $billAmount;
+		$billable = ($arr['status'] !== 'cancelled') ? $billAmount : 0;
+		$cl['totalBilled'] = $client->totalBilled + $billable;
 		$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
 		$this->admin->updateClients($cl, $clientId);
 
@@ -438,7 +442,7 @@ class Admin extends MY_Controller
 			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
 			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
 			. '</div>';
-		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
+		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.status, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
 		$this->datatables->from(TABLE_SERVICES . ' as s');
 		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
 		$this->datatables->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
@@ -454,7 +458,7 @@ class Admin extends MY_Controller
 			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
 			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
 			. '</div>';
-		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
+		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.status, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
 		$this->datatables->from(TABLE_SERVICES . ' as s');
 		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
 		$this->datatables->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
@@ -507,6 +511,7 @@ class Admin extends MY_Controller
 		$arrr['caregiverId'] = $this->input->post('caregiverId');
 		$clientId = $arrr['clientId'] = $this->input->post('clientId');
 		$arrr['serviceType'] = $this->input->post('serviceType');
+		$arrr['status'] = $this->input->post('status') ?: 'scheduled';
 		$arrr['rate'] = $this->input->post('rate');
 		$arrr['billRate'] = $this->input->post('billRate');
 		$arrr['hours'] = $this->input->post('hours');
@@ -514,10 +519,13 @@ class Admin extends MY_Controller
 		$arrr['comments'] = $this->input->post('comments');
 		$billAmount = $arrr['billAmount'] = $this->input->post('billAmount');
 		$oldBillAmount = $this->input->post('oldBillAmount');
+		$oldStatus = $this->input->post('oldStatus') ?: 'scheduled';
 		$arrr['updateAt'] = date('Y-m-d H:i:s');
 		$this->admin->updateService($arrr, $id);
 		$client = $this->admin->getClientsById($clientId);
-		$cl['totalBilled'] = $client->totalBilled + $billAmount - $oldBillAmount;
+		$oldBillable = ($oldStatus !== 'cancelled') ? $oldBillAmount : 0;
+		$newBillable = ($arrr['status'] !== 'cancelled') ? $billAmount : 0;
+		$cl['totalBilled'] = $client->totalBilled + $newBillable - $oldBillable;
 		$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
 		$this->admin->updateClients($cl, $clientId);
 		$this->session->set_flashdata('success', 'Service Update Successfully.');
@@ -534,6 +542,7 @@ class Admin extends MY_Controller
 		$clientId = $arr['clientId'] = $this->input->post('clientId');
 		$oldClientId = $this->input->post('oldClientId');
 		$arr['serviceType'] = $this->input->post('serviceType');
+		$arr['status'] = $this->input->post('status') ?: 'scheduled';
 		$arr['rate'] = $this->input->post('rate');
 		$arr['billRate'] = $this->input->post('billRate');
 		$arr['hours'] = $this->input->post('hours');
@@ -541,10 +550,13 @@ class Admin extends MY_Controller
 		$arr['comments'] = $this->input->post('comments');
 		$billAmount = $arr['billAmount'] = $this->input->post('billAmount');
 		$oldBillAmount = $this->input->post('oldBillAmount');
+		$oldStatus = $this->input->post('oldStatus') ?: 'scheduled';
 		$arr['updateAt'] = date('Y-m-d H:i:s');
 		$this->admin->updateService($arr, $id);
 		$client = $this->admin->getClientsById($clientId);
-		$cl['totalBilled'] = $client->totalBilled + $billAmount - $oldBillAmount;
+		$oldBillable = ($oldStatus !== 'cancelled') ? $oldBillAmount : 0;
+		$newBillable = ($arr['status'] !== 'cancelled') ? $billAmount : 0;
+		$cl['totalBilled'] = $client->totalBilled + $newBillable - $oldBillable;
 		$cl['outstanding'] = $cl['totalBilled'] - $client->totalPaid;
 		$this->admin->updateClients($cl, $clientId);
 
@@ -772,6 +784,7 @@ class Admin extends MY_Controller
 		$action = '<div class="d-flex gap-1 justify-content-center">'
 			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
 			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info px-2 py-1" title="View"><i class="feather icon-eye"></i></a>'
+			. '<a href="javascript:void(0);" onclick="confirmDeleteInvoice(\'' . base_url('admin/deleteInvoice/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></a>'
 			. '</div>';
 		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
 		$this->datatables->from(TABLE_INVOICES . ' as i');
@@ -785,6 +798,7 @@ class Admin extends MY_Controller
 		$action = '<div class="d-flex gap-1 justify-content-center">'
 			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
 			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info px-2 py-1" title="Print"><i class="feather icon-printer"></i></a>'
+			. '<a href="javascript:void(0);" onclick="confirmDeleteInvoice(\'' . base_url('admin/deleteInvoice/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></a>'
 			. '</div>';
 		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
 		$this->datatables->from(TABLE_INVOICES . ' as i');
@@ -867,18 +881,19 @@ class Admin extends MY_Controller
 
 	function getServicesInvoice()
 	{
-		$this->datatables->select('s.id, i.invoiceNumber, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.updateAt');
+		$this->datatables->select('s.id, i.invoiceNumber, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.status, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.updateAt');
 		$this->datatables->from(TABLE_SERVICES . ' as s');
 		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
 		$this->datatables->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
 		$this->datatables->join(TABLE_INVOICES . ' as i', 's.invoiceId = i.id', 'left');
 		$this->datatables->where(array('c.status' => 0, 'cl.status' => 0));
+		$this->datatables->where("s.status != 'cancelled'");
 		$this->datatables->generate();
 	}
 
 	function getServicesCustomInvoice($startDate, $endDate)
 	{
-		$this->datatables->select('s.id as id, i.invoiceNumber, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.updateAt');
+		$this->datatables->select('s.id as id, i.invoiceNumber, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.status, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.updateAt');
 		$this->datatables->from(TABLE_SERVICES . ' as s');
 		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
 		$this->datatables->join(TABLE_CLIENTS . ' as cl', 's.clientId = cl.id');
@@ -886,6 +901,7 @@ class Admin extends MY_Controller
 		$this->datatables->where(array('s.date >=' => $startDate));
 		$this->datatables->where(array('s.date <=' => $endDate));
 		$this->datatables->where(array('c.status' => 0, 'cl.status' => 0));
+		$this->datatables->where("s.status != 'cancelled'");
 		$this->datatables->generate();
 	}
 
@@ -940,6 +956,141 @@ class Admin extends MY_Controller
 		$this->admin->updateClients($arrr, $client->id);
 		$this->session->set_flashdata('success', 'Invoice Generated Successfully.');
 		redirect($_SERVER['HTTP_REFERER']);
+	}
+
+	function deleteInvoice($id)
+	{
+		$this->admin->deleteInvoiceById($id);
+		$this->session->set_flashdata('success', 'Invoice deleted successfully.');
+		redirect(admin_url('invoice'));
+	}
+
+	// ---------------------------------------------------------------
+	// Payments module
+	// ---------------------------------------------------------------
+
+	function payments()
+	{
+		$this->data['title'] = 'Payments';
+		$this->makeView('/payments');
+	}
+
+	function getPaymentsData()
+	{
+		$payments = $this->admin->getPayments();
+		$result   = [];
+		foreach ($payments as $p) {
+			$items = $this->admin->getPaymentItems($p->id);
+			$invoiceList = implode(', ', array_map(function ($i) {
+				return $i->invoiceNumber . ' ($' . number_format($i->amountApplied, 2) . ')';
+			}, $items));
+			$result[] = [
+				'id'          => $p->id,
+				'paymentDate' => $p->paymentDate,
+				'clientName'  => $p->clientName,
+				'totalAmount' => $p->totalAmount,
+				'taxAmount'   => $p->taxAmount,
+				'invoiceList' => $invoiceList ?: '—',
+				'note'        => $p->note,
+			];
+		}
+		echo json_encode($result);
+	}
+
+	function addPayment()
+	{
+		$this->data['clients'] = $this->admin->getClients();
+		$this->popupView('/addPayment');
+	}
+
+	function getClientInvoices($clientId)
+	{
+		$invoices = $this->admin->getUnpaidInvoicesByClient($clientId);
+		echo json_encode($invoices);
+	}
+
+	function savePayment()
+	{
+		$clientId      = $this->input->post('clientId');
+		$paymentDate   = date('Y-m-d', strtotime($this->input->post('paymentDate')));
+		$note          = $this->input->post('note');
+		$taxPercentage = $this->input->post('taxPercentage') ?: 0;
+		$taxAmount     = $this->input->post('taxAmount')     ?: 0;
+		$invoiceIds    = $this->input->post('invoiceIds');   // array [invoiceId => amount]
+
+		if (empty($invoiceIds)) {
+			$this->session->set_flashdata('error', 'No invoices selected.');
+			redirect($_SERVER['HTTP_REFERER']);
+			return;
+		}
+
+		// Compute total from the submitted invoice amounts
+		$totalAmount = array_sum($invoiceIds);
+
+		$paymentId = $this->admin->savePayment([
+			'clientId'      => $clientId,
+			'paymentDate'   => $paymentDate,
+			'totalAmount'   => $totalAmount,
+			'taxAmount'     => $taxAmount,
+			'note'          => $note,
+			'createdAt'     => date('Y-m-d H:i:s'),
+		]);
+
+		$now = date('Y-m-d H:i:s');
+		foreach ($invoiceIds as $invoiceId => $amountApplied) {
+			$amountApplied = (float) $amountApplied;
+			if ($amountApplied <= 0) continue;
+
+			$this->admin->savePaymentItem([
+				'paymentId'     => $paymentId,
+				'invoiceId'     => $invoiceId,
+				'amountApplied' => $amountApplied,
+			]);
+
+			// Update invoice paid/due/status
+			$invoice     = $this->admin->getInvoiceById($invoiceId);
+			$newPaid     = $invoice->paidAmount + $amountApplied;
+			$newDue      = $invoice->total - $newPaid;
+			if ($newDue <= 0) {
+				$status = 'Fully Paid';
+			} elseif ($newPaid > 0) {
+				$status = 'Partial Paid';
+			} else {
+				$status = $invoice->status;
+			}
+			$this->admin->updateInvoice([
+				'paidAmount' => $newPaid,
+				'dueAmount'  => $newDue,
+				'status'     => $status,
+				'updateAt'   => $now,
+			], $invoiceId);
+
+			// Write to invoice_payments for backward-compatible payment history on editInvoice
+			$this->admin->saveInvoicePayment([
+				'invoiceId' => $invoiceId,
+				'amount'    => $amountApplied,
+				'note'      => $note,
+				'paidAt'    => $now,
+			]);
+		}
+
+		// Update client totals
+		$client  = $this->admin->getClientsById($clientId);
+		$newPaid = $client->totalPaid + $totalAmount;
+		$this->admin->updateClients([
+			'totalPaid'   => $newPaid,
+			'outstanding' => $client->totalBilled - $newPaid,
+		], $clientId);
+
+		$this->session->set_flashdata('success', 'Payment recorded successfully.');
+		redirect(admin_url('payments'));
+	}
+
+	function deletePayment($id)
+	{
+		$this->admin->deletePaymentById($id);
+		$this->session->set_flashdata('success', 'Payment deleted and invoice balances reversed.');
+		redirect(admin_url('payments'));
 	}
 
 }
