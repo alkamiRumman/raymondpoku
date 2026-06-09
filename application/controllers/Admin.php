@@ -132,11 +132,14 @@ class Admin extends MY_Controller
 
 	function getCaregivers()
 	{
-		$action = '<div class="d-flex gap-1 justify-content-center">'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editCaregiver/$1') . '\')" class="btn btn-xs btn-primary px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
-			. '<a href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-archive\', \'' . base_url('admin/changeStatus/$1') . '\')" class="btn btn-xs btn-outline-warning px-2 py-1" title="Archive"><i class="feather icon-archive"></i></a>'
-			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteCaregivers/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
-			. '</div>';
+		$action = '<div class="dropdown">'
+			. '<button type="button" class="btn btn-xs tbl-action-btn" data-bs-toggle="dropdown" aria-expanded="false"><i class="feather icon-more-vertical"></i></button>'
+			. '<ul class="dropdown-menu tbl-dropdown-menu">'
+			. '<li><a class="dropdown-item" href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editCaregiver/$1') . '\')"><i class="feather icon-edit-2" style="color:#2563eb;"></i>Edit</a></li>'
+			. '<li><a class="dropdown-item text-warning" href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-archive\', \'' . base_url('admin/changeStatus/$1') . '\')"><i class="feather icon-archive"></i>Archive</a></li>'
+			. '<li><hr class="dropdown-divider"></li>'
+			. '<li><a class="dropdown-item text-danger" href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteCaregivers/$1') . '\')"><i class="feather icon-trash-2"></i>Delete</a></li>'
+			. '</ul></div>';
 		$this->datatables->select('id, firstName, lastName, address, phone, email, sin, dateOfBirth, hiringDate, baseRate, position, notes, status, createAt, updateAt');
 		$this->datatables->from(TABLE_CAREGIVERS);
 		$this->datatables->where(array('status' => 0));
@@ -240,12 +243,15 @@ class Admin extends MY_Controller
 
 	function getClients()
 	{
-		$action = '<div class="d-flex gap-1 justify-content-center">'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')" class="btn btn-xs btn-primary px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
-			. '<a href="' . base_url('admin/clientStatement/$1') . '" class="btn btn-xs btn-outline-info px-2 py-1" title="Statement"><i class="feather icon-file-text"></i></a>'
-			. '<a href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-archive\', \'' . base_url('admin/changeClientStatus/$1') . '\')" class="btn btn-xs btn-outline-warning px-2 py-1" title="Archive"><i class="feather icon-archive"></i></a>'
-			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteClients/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
-			. '</div>';
+		$action = '<div class="dropdown">'
+			. '<button type="button" class="btn btn-xs tbl-action-btn" data-bs-toggle="dropdown" aria-expanded="false"><i class="feather icon-more-vertical"></i></button>'
+			. '<ul class="dropdown-menu tbl-dropdown-menu">'
+			. '<li><a class="dropdown-item" href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editClient/$1') . '\')"><i class="feather icon-edit-2" style="color:#2563eb;"></i>Edit</a></li>'
+			. '<li><a class="dropdown-item" href="' . base_url('admin/clientStatement/$1') . '"><i class="feather icon-file-text" style="color:#0891b2;"></i>Statement</a></li>'
+			. '<li><a class="dropdown-item text-warning" href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-archive\', \'' . base_url('admin/changeClientStatus/$1') . '\')"><i class="feather icon-archive"></i>Archive</a></li>'
+			. '<li><hr class="dropdown-divider"></li>'
+			. '<li><a class="dropdown-item text-danger" href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteClients/$1') . '\')"><i class="feather icon-trash-2"></i>Delete</a></li>'
+			. '</ul></div>';
 		$this->datatables->select('c.id as id, c.name, c.address, c.phone, c.dol, c.referralSource, c.budget, c.referralDate, c.billingAddress, c.companyName, c.adjustorName, c.adjustorEmail, c.adjustorPhone, c.adjustorFax, c.billRate, c.budgetedHours, c.status, COALESCE(SUM(i.total),0) as totalBilled, COALESCE(SUM(i.paidAmount),0) as totalPaid, COALESCE(SUM(i.dueAmount),0) as outstanding, c.createAt, c.updateAt');
 		$this->datatables->from(TABLE_CLIENTS . ' as c');
 		$this->datatables->join(TABLE_INVOICES . ' as i', 'i.clientId = c.id', 'left');
@@ -442,10 +448,14 @@ class Admin extends MY_Controller
 
 	function getServices()
 	{
-		$action = '<div class="d-flex gap-1 justify-content-center">'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
-			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
-			. '</div>';
+		$serviceAction = '<div class="dropdown">'
+			. '<button type="button" class="btn btn-xs tbl-action-btn" data-bs-toggle="dropdown" aria-expanded="false"><i class="feather icon-more-vertical"></i></button>'
+			. '<ul class="dropdown-menu tbl-dropdown-menu">'
+			. '<li><a class="dropdown-item" href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')"><i class="feather icon-edit-2" style="color:#2563eb;"></i>Edit</a></li>'
+			. '<li><hr class="dropdown-divider"></li>'
+			. '<li><a class="dropdown-item text-danger" href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')"><i class="feather icon-trash-2"></i>Delete</a></li>'
+			. '</ul></div>';
+		$action = $serviceAction;
 		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.status, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
 		$this->datatables->from(TABLE_SERVICES . ' as s');
 		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
@@ -458,10 +468,13 @@ class Admin extends MY_Controller
 
 	function getServicesCustom($startDate, $endDate)
 	{
-		$action = '<div class="d-flex gap-1 justify-content-center">'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
-			. '<button onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></button>'
-			. '</div>';
+		$action = '<div class="dropdown">'
+			. '<button type="button" class="btn btn-xs tbl-action-btn" data-bs-toggle="dropdown" aria-expanded="false"><i class="feather icon-more-vertical"></i></button>'
+			. '<ul class="dropdown-menu tbl-dropdown-menu">'
+			. '<li><a class="dropdown-item" href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editService/$1') . '\')"><i class="feather icon-edit-2" style="color:#2563eb;"></i>Edit</a></li>'
+			. '<li><hr class="dropdown-divider"></li>'
+			. '<li><a class="dropdown-item text-danger" href="javascript:void(0);" onclick="showSwal(\'passing-parameter-execute-delete\', \'' . base_url('admin/deleteService/$1') . '\')"><i class="feather icon-trash-2"></i>Delete</a></li>'
+			. '</ul></div>';
 		$this->datatables->select('s.id as id, c.firstName, c.lastName, cl.name, s.startTime, s.endTime, s.date, s.serviceType, s.status, s.rate, s.billRate, s.billAmount, s.hours, s.amount, s.comments, i.invoiceNumber, s.updateAt');
 		$this->datatables->from(TABLE_SERVICES . ' as s');
 		$this->datatables->join(TABLE_CAREGIVERS . ' as c', 's.caregiverId = c.id');
@@ -785,11 +798,14 @@ class Admin extends MY_Controller
 
 	function getInvoice()
 	{
-		$action = '<div class="d-flex gap-1 justify-content-center">'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info px-2 py-1" title="View"><i class="feather icon-eye"></i></a>'
-			. '<a href="javascript:void(0);" onclick="confirmDeleteInvoice(\'' . base_url('admin/deleteInvoice/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></a>'
-			. '</div>';
+		$action = '<div class="dropdown">'
+			. '<button type="button" class="btn btn-xs tbl-action-btn" data-bs-toggle="dropdown" aria-expanded="false"><i class="feather icon-more-vertical"></i></button>'
+			. '<ul class="dropdown-menu tbl-dropdown-menu">'
+			. '<li><a class="dropdown-item" href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')"><i class="feather icon-edit-2" style="color:#2563eb;"></i>Edit</a></li>'
+			. '<li><a class="dropdown-item" href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')"><i class="feather icon-eye" style="color:#0891b2;"></i>View</a></li>'
+			. '<li><hr class="dropdown-divider"></li>'
+			. '<li><a class="dropdown-item text-danger" href="javascript:void(0);" onclick="confirmDeleteInvoice(\'' . base_url('admin/deleteInvoice/$1') . '\')"><i class="feather icon-trash-2"></i>Delete</a></li>'
+			. '</ul></div>';
 		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
 		$this->datatables->from(TABLE_INVOICES . ' as i');
 		$this->datatables->join(TABLE_CLIENTS . ' as cl', 'i.clientId = cl.id');
@@ -799,11 +815,14 @@ class Admin extends MY_Controller
 
 	function getCustomInvoice($month, $year)
 	{
-		$action = '<div class="d-flex gap-1 justify-content-center">'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')" class="btn btn-xs btn-success px-2 py-1" title="Edit"><i class="feather icon-edit-2"></i></a>'
-			. '<a href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')" class="btn btn-xs btn-info px-2 py-1" title="Print"><i class="feather icon-printer"></i></a>'
-			. '<a href="javascript:void(0);" onclick="confirmDeleteInvoice(\'' . base_url('admin/deleteInvoice/$1') . '\')" class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></a>'
-			. '</div>';
+		$action = '<div class="dropdown">'
+			. '<button type="button" class="btn btn-xs tbl-action-btn" data-bs-toggle="dropdown" aria-expanded="false"><i class="feather icon-more-vertical"></i></button>'
+			. '<ul class="dropdown-menu tbl-dropdown-menu">'
+			. '<li><a class="dropdown-item" href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/editInvoice/$1') . '\')"><i class="feather icon-edit-2" style="color:#2563eb;"></i>Edit</a></li>'
+			. '<li><a class="dropdown-item" href="javascript:void(0);" onclick="loadPopup(\'' . base_url('admin/printInvoice/$1') . '\')"><i class="feather icon-printer" style="color:#0891b2;"></i>View / Print</a></li>'
+			. '<li><hr class="dropdown-divider"></li>'
+			. '<li><a class="dropdown-item text-danger" href="javascript:void(0);" onclick="confirmDeleteInvoice(\'' . base_url('admin/deleteInvoice/$1') . '\')"><i class="feather icon-trash-2"></i>Delete</a></li>'
+			. '</ul></div>';
 		$this->datatables->select('i.id as id, i.invoiceDate, cl.name, cl.billingAddress, cl.phone, i.totalHours, i.total, i.paidAmount, i.dueAmount, i.status');
 		$this->datatables->from(TABLE_INVOICES . ' as i');
 		$this->datatables->join(TABLE_CLIENTS . ' as cl', 'i.clientId = cl.id');
