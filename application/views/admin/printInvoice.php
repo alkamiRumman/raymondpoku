@@ -1,227 +1,242 @@
-<div class="modal" id="modal-default" style="display: block; overflow: auto;">
+<div class="modal" id="modal-default" style="display:block;overflow:auto;">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
-			<div class="modal-header">
-				<h4 class="modal-title"><b>Client Invoice</b></h4>
-				<button type="button" class="btn btn-danger close">Close</button>
+
+			<!-- Header -->
+			<div class="modal-header" style="background:#1a3c5e;">
+				<div>
+					<h5 class="modal-title text-white fw-bold mb-0">Invoice</h5>
+					<small class="text-white-50"><?= htmlspecialchars($data->invoiceNumber) ?>
+						<?php
+							$statusColors = ['Sent' => '#f59e0b', 'Partial Paid' => '#3b82f6', 'Fully Paid' => '#22c55e'];
+							$sc = $statusColors[$data->status] ?? '#6b7280';
+						?>
+						&nbsp;<span class="badge rounded-pill" style="background:<?= $sc ?>;font-size:11px;"><?= htmlspecialchars($data->status) ?></span>
+					</small>
+				</div>
+				<div class="d-flex gap-2">
+					<button type="button" class="btn btn-sm btn-outline-light printButton">
+						<i data-feather="printer" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>Print
+					</button>
+					<button type="button" class="btn btn-sm btn-outline-light close">Close</button>
+				</div>
 			</div>
-			<div class="modal-body" id="printThis">
-				<div class="row">
-					<div class="col-md-6 mb-3">
-						<img src="<?= base_url('assets/images/logo.png') ?>" height="120">
-					</div>
-					<div class="col-md-6 mb-3 text-end">
-						<h2>INVOICE</h2>
-						<?php if ($data->title) { ?>
-							<small>(<?= $data->title ?>)</small>
-						<?php } ?>
-						<h4>Mayer Health Services Inc.</h4>
-						<p>400 Applewood Crescent, Unit 100<br>
-							Vaughan, Ontario L4K 0C3<br>Canada<br>www.mayerhealth.ca</p>
-					</div>
-				</div>
-				<hr>
-				<div class="row">
-					<div class="col-md-7 mb-3">
-						<h5>BILL TO</h5>
-						<h5><?= $data->companyName . '<br>' . $data->name ?></h5>
-						<p><?= $data->phone ?><br><?= $data->billingAddress ?></p>
-					</div>
-					<div class="col-md-5 mb-3">
-						<table class="table table-responsive table-borderless table-sm">
-							<tbody>
-							<tr>
-								<th style="padding-top: 0;padding-bottom: 0" class="text-end">Invoice Number:</th>
-								<td style="padding-top: 0;padding-bottom: 0"
-									class="text-start pl-2"><?= $data->invoiceNumber ?>
-								</td>
-							</tr>
-							<tr>
-								<th style="padding-top: 0;padding-bottom: 0" class="text-end">P.O/S.O Number:</th>
-								<td style="padding-top: 0;padding-bottom: 0"
-									class="text-start pl-2"><?= $data->poNumber ?></td>
-							</tr>
-							<tr>
-								<th style="padding-top: 0;padding-bottom: 0" class="text-end">Invoice Date:</th>
-								<td style="padding-top: 0;padding-bottom: 0"
-									class="text-start pl-2"><?= date('d M Y', strtotime($data->invoiceDate)) ?></td>
-							</tr>
-							<tr>
-								<th style="padding-top: 0;padding-bottom: 0" class="text-end">Payment Due:</th>
-								<td style="padding-top: 0;padding-bottom: 0"
-									class="text-start pl-2"><?= date('d M Y', strtotime($data->dueDate)) ?></td>
-							</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12 mb-3">
-						<div class="table-responsive">
-							<table class="table"
-								   style="width: 100% !important;">
-								<thead>
-								<tr class="bg-info">
-									<th class="text-dark">Services</th>
-									<th class="text-dark">Caregiver</th>
-									<th class="text-dark">Hours</th>
-									<th class="text-dark">Rate</th>
-									<th class="text-dark">Amount</th>
-								</tr>
-								</thead>
-								<tbody>
-								<?php if ($services) {
-									foreach ($services as $datum) { ?>
-										<tr>
-											<td><?= $datum->serviceType . '<br>' . date('d M Y', strtotime($datum->date)) . ' (' . date('h:i A', strtotime($datum->startTime)) . ' - ' . date('h:i A', strtotime($datum->endTime)) . ')' ?></td>
-											<td><?= $datum->firstName . ' ' . $datum->lastName ?></td>
-											<td><?= $datum->hours ?></td>
-											<td>$<?= $datum->billRate ?></td>
-											<td>$<?= $datum->billAmount ?></td>
-										</tr>
-									<?php }
-								} else { ?>
-									<tr>
-										<td class="text-center text-danger" colspan="5">No record found!</td>
-									</tr>
-								<?php } ?>
-								</tbody>
-								<tfoot class="table-footer">
+
+			<div class="modal-body p-4" id="printThis">
+
+				<!-- ── Company + Invoice Title ─────────────────────────────── -->
+				<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+					<tr>
+						<td style="vertical-align:top;width:50%;">
+							<img src="<?= base_url('assets/images/logo.png') ?>" height="56" style="display:block;margin-bottom:8px;">
+							<div style="font-size:12px;color:#475569;line-height:1.6;">
+								400 Applewood Crescent, Unit 100<br>
+								Vaughan, Ontario L4K 0C3 &nbsp;·&nbsp; Canada<br>
+								www.mayerhealth.ca
+							</div>
+						</td>
+						<td style="vertical-align:top;text-align:right;">
+							<div style="font-size:36px;font-weight:800;color:#1a3c5e;letter-spacing:3px;line-height:1;">INVOICE</div>
+							<?php if (!empty($data->title)): ?>
+							<div style="font-size:12px;color:#64748b;margin-top:4px;"><?= htmlspecialchars($data->title) ?></div>
+							<?php endif; ?>
+							<div style="margin-top:8px;">
+								<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff;background:<?= $sc ?>;"><?= htmlspecialchars($data->status) ?></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+
+				<!-- Divider -->
+				<div style="border-top:3px solid #1a3c5e;margin-bottom:20px;"></div>
+
+				<!-- ── Bill To + Invoice Meta ───────────────────────────────── -->
+				<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+					<tr>
+						<td style="vertical-align:top;width:52%;">
+							<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Bill To</div>
+							<?php if (!empty($data->companyName)): ?>
+							<div style="font-size:15px;font-weight:700;color:#0f172a;"><?= htmlspecialchars($data->companyName) ?></div>
+							<?php endif; ?>
+							<div style="font-size:14px;font-weight:600;color:#1e293b;"><?= htmlspecialchars($data->name) ?></div>
+							<?php if (!empty($data->phone)): ?>
+							<div style="font-size:12px;color:#475569;"><?= htmlspecialchars($data->phone) ?></div>
+							<?php endif; ?>
+							<?php if (!empty($data->billingAddress)): ?>
+							<div style="font-size:12px;color:#475569;margin-top:2px;"><?= nl2br(htmlspecialchars($data->billingAddress)) ?></div>
+							<?php endif; ?>
+						</td>
+						<td style="vertical-align:top;">
+							<table style="width:100%;border-collapse:collapse;font-size:13px;">
 								<tr>
-									<th colspan="4" class="text-end">Total (CAD)</th>
-									<th>$<?php
-										$totalAmount = 0;
-										foreach ($services as $item) {
-											$totalAmount += $item->billAmount;
-										}
-										echo $totalAmount ?></th>
+									<td style="padding:4px 12px 4px 0;color:#64748b;font-weight:600;white-space:nowrap;">Invoice #</td>
+									<td style="padding:4px 0;font-weight:700;color:#0f172a;"><?= htmlspecialchars($data->invoiceNumber) ?></td>
+								</tr>
+								<?php if (!empty($data->poNumber)): ?>
+								<tr>
+									<td style="padding:4px 12px 4px 0;color:#64748b;font-weight:600;">P.O / S.O #</td>
+									<td style="padding:4px 0;color:#1e293b;"><?= htmlspecialchars($data->poNumber) ?></td>
+								</tr>
+								<?php endif; ?>
+								<tr>
+									<td style="padding:4px 12px 4px 0;color:#64748b;font-weight:600;">Invoice Date</td>
+									<td style="padding:4px 0;color:#1e293b;"><?= date('d M Y', strtotime($data->invoiceDate)) ?></td>
 								</tr>
 								<tr>
-									<th colspan="4" class="text-end">Tax (HST)</th>
-									<th>$<?= $data->taxAmount ?></th>
+									<td style="padding:4px 12px 4px 0;color:#64748b;font-weight:600;">Payment Due</td>
+									<td style="padding:4px 0;color:#1e293b;"><?= date('d M Y', strtotime($data->dueDate)) ?></td>
 								</tr>
-								<tr>
-									<th colspan="4" class="text-end">Amount Due (CAD)</th>
-									<th>$<?= $data->total ?></th>
-								</tr>
-								<?php if ($data->paidAmount > 0) { ?>
-									<tr>
-										<th colspan="4" class="text-end">Payment Received (CAD)</th>
-										<th>$<?= $data->paidAmount ?></th>
-									</tr>
-									<tr>
-										<th colspan="4" class="text-end">Balance Remaining (CAD)</th>
-										<th>$<?= $data->total - $data->paidAmount ?></th>
-									</tr>
-								<?php } ?>
-								</tfoot>
 							</table>
-						</div>
+						</td>
+					</tr>
+				</table>
+
+				<!-- ── Services Table ─────────────────────────────────────── -->
+				<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+					<thead>
+					<tr style="background:#1a3c5e;">
+						<th style="padding:9px 12px;color:#fff;text-align:left;font-weight:600;">Service / Date</th>
+						<th style="padding:9px 12px;color:#fff;text-align:left;font-weight:600;">Caregiver</th>
+						<th style="padding:9px 12px;color:#fff;text-align:left;font-weight:600;white-space:nowrap;">Times</th>
+						<th style="padding:9px 12px;color:#fff;text-align:center;font-weight:600;">Hrs</th>
+						<th style="padding:9px 12px;color:#fff;text-align:right;font-weight:600;">Rate</th>
+						<th style="padding:9px 12px;color:#fff;text-align:right;font-weight:600;">Amount</th>
+					</tr>
+					</thead>
+					<tbody>
+					<?php
+						$totalAmount = 0;
+						foreach ($services as $i => $row):
+							$totalAmount += $row->billAmount;
+							$rowBg = ($i % 2 === 0) ? '#ffffff' : '#f8fafc';
+					?>
+					<tr style="background:<?= $rowBg ?>;">
+						<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">
+							<div style="font-weight:600;"><?= htmlspecialchars($row->serviceType) ?></div>
+							<div style="font-size:11px;color:#64748b;"><?= date('d M Y', strtotime($row->date)) ?></div>
+						</td>
+						<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;"><?= htmlspecialchars($row->firstName . ' ' . $row->lastName) ?></td>
+						<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;white-space:nowrap;"><?= date('h:i A', strtotime($row->startTime)) ?> – <?= date('h:i A', strtotime($row->endTime)) ?></td>
+						<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:center;"><?= $row->hours ?></td>
+						<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;">$<?= number_format($row->billRate, 2) ?></td>
+						<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">$<?= number_format($row->billAmount, 2) ?></td>
+					</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+
+				<!-- ── Totals (right-aligned) ─────────────────────────────── -->
+				<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+					<tr>
+						<td style="width:55%;vertical-align:top;"></td>
+						<td style="vertical-align:top;">
+							<table style="width:100%;border-collapse:collapse;font-size:13px;">
+								<tr>
+									<td style="padding:5px 16px 5px 0;color:#475569;">Subtotal</td>
+									<td style="padding:5px 0;text-align:right;font-weight:600;">$<?= number_format($totalAmount, 2) ?></td>
+								</tr>
+								<tr>
+									<td style="padding:5px 16px 5px 0;color:#475569;">
+										Tax (HST<?= $data->taxPercentage > 0 ? ' ' . $data->taxPercentage . '%' : '' ?>)
+									</td>
+									<td style="padding:5px 0;text-align:right;">$<?= number_format($data->taxAmount, 2) ?></td>
+								</tr>
+								<tr>
+									<td colspan="2" style="padding:2px 0;">
+										<div style="border-top:1px solid #cbd5e1;margin:4px 0;"></div>
+									</td>
+								</tr>
+								<tr>
+									<td style="padding:6px 16px 6px 0;font-weight:700;font-size:14px;color:#0f172a;">Amount Due (CAD)</td>
+									<td style="padding:6px 0;text-align:right;font-weight:700;font-size:14px;color:#0f172a;">$<?= number_format($data->total, 2) ?></td>
+								</tr>
+								<?php if ($data->paidAmount > 0): ?>
+								<tr>
+									<td style="padding:5px 16px 5px 0;color:#16a34a;font-weight:600;">Payment Received</td>
+									<td style="padding:5px 0;text-align:right;color:#16a34a;font-weight:600;">–$<?= number_format($data->paidAmount, 2) ?></td>
+								</tr>
+								<tr>
+									<td colspan="2" style="padding:2px 0;">
+										<div style="border-top:2px solid #f59e0b;margin:4px 0;"></div>
+									</td>
+								</tr>
+								<tr style="background:#fff7ed;">
+									<td style="padding:7px 16px 7px 8px;font-weight:700;color:#92400e;font-size:13px;">Balance Owing (CAD)</td>
+									<td style="padding:7px 8px 7px 0;text-align:right;font-weight:700;color:#dc2626;font-size:14px;">$<?= number_format($data->total - $data->paidAmount, 2) ?></td>
+								</tr>
+								<?php endif; ?>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+				<!-- ── Payment History ────────────────────────────────────── -->
+				<?php if (!empty($payments)): ?>
+				<div style="border-top:1px solid #e2e8f0;padding-top:16px;">
+					<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:10px;">Payment History</div>
+					<table style="width:100%;border-collapse:collapse;font-size:12px;">
+						<thead>
+						<tr style="background:#f1f5f9;">
+							<th style="padding:6px 10px;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:600;color:#475569;">#</th>
+							<th style="padding:6px 10px;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:600;color:#475569;">Date</th>
+							<th style="padding:6px 10px;text-align:right;border-bottom:2px solid #e2e8f0;font-weight:600;color:#475569;">Amount (CAD)</th>
+							<th style="padding:6px 10px;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:600;color:#475569;">Note</th>
+						</tr>
+						</thead>
+						<tbody>
+						<?php foreach ($payments as $i => $p): ?>
+						<tr>
+							<td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;"><?= $i + 1 ?></td>
+							<td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;"><?= date('d M Y', strtotime($p->paidAt)) ?></td>
+							<td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;text-align:right;color:#16a34a;font-weight:600;">$<?= number_format($p->amount, 2) ?></td>
+							<td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;color:#64748b;"><?= htmlspecialchars($p->note ?: '—') ?></td>
+						</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
 				</div>
+				<?php endif; ?>
+
+			</div><!-- /modal-body -->
+
+			<div class="modal-footer d-flex justify-content-end gap-2">
+				<button type="button" class="btn btn-secondary close">Close</button>
+				<button type="button" class="btn btn-primary printButton">
+					<i data-feather="printer" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>Print
+				</button>
 			</div>
-			<?php if (!empty($payments)): ?>
-			<div class="row mt-3">
-				<div class="col-md-12">
-					<h6 class="fw-semibold mb-2">Payment History</h6>
-					<div class="table-responsive">
-						<table class="table table-sm table-bordered" style="font-size:13px">
-							<thead class="table-light">
-							<tr>
-								<th>#</th>
-								<th>Date &amp; Time</th>
-								<th>Amount (CAD)</th>
-								<th>Note</th>
-							</tr>
-							</thead>
-							<tbody>
-							<?php foreach ($payments as $i => $p): ?>
-							<tr>
-								<td><?= $i + 1 ?></td>
-								<td><?= date('d M Y, g:i A', strtotime($p->paidAt)) ?></td>
-								<td class="text-success fw-semibold">$<?= number_format($p->amount, 2) ?></td>
-								<td><?= htmlspecialchars($p->note ?: '—') ?></td>
-							</tr>
-							<?php endforeach; ?>
-							<tr class="table-light fw-bold">
-								<td colspan="2" class="text-end">Total Paid</td>
-								<td class="text-success">$<?= number_format($data->paidAmount, 2) ?></td>
-								<td></td>
-							</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-			<?php endif; ?>
-		</div>
-		<div class="modal-footer no-print">
-			<button type="button" class="btn btn-danger close">Close</button>
-			<button type="button" class="btn btn-primary printButton">Print</button>
+
 		</div>
 	</div>
 </div>
-</div>
 
-<style>
-	@media print {
-		.modal-header, .modal-footer, .no-print { display: none !important; }
-	}
-</style>
 <script>
-	$('.close').on('click', function () {
-		$("#remoteModal1").modal('hide');
-	});
+$('.close').on('click', function () { $('#remoteModal1').modal('hide'); });
 
-	$('.printButton').on('click', function () {
-		var printContents = document.getElementById('printThis').innerHTML;
-		var printWindow = window.open('', '_blank');
-		printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Print Invoice</title>
-                    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0/css/bootstrap.min.css">
-                    <style>
-                        body { padding: 20px; }
-                        h1, h2, h3, h4, h5, h6 { margin: 0; padding: 0; }
-                        .table { width: 100%; max-width: 100%; margin-bottom: 1rem; background-color: transparent; }
-                        .table th, .table td { padding-top: 0; padding-bottom: 0; vertical-align: top; border-top: 1px solid #dee2e6; }
-                        .table thead th { vertical-align: bottom; text-align: left; background-color: #66D1D1; }
-                        .table tbody + tbody { border-top: 2px solid #dee2e6; }
-                        .table-sm th, .table-sm td { padding: 0.3rem; }
-                        .table-bordered { border: 1px solid #dee2e6; }
-                        .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
-                        .table-bordered thead th, .table-bordered thead td { border-bottom-width: 2px; }
-                        .table-borderless th, .table-borderless td, .table-borderless thead th, .table-borderless tbody + tbody { border: 0; }
-                        .table-light th, .table-light td { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        .text-success { color: #198754 !important; }
-                        .text-end { text-align: right; }
-                        .text-start { text-align: left; }
-                        .fw-semibold { font-weight: 600; }
-                        .fw-bold { font-weight: 700; }
-                        .pl-2 { padding-left: 0.5rem; }
-                        .mb-3 { margin-bottom: 1rem; }
-                        .mt-3 { margin-top: 1rem; }
-                        .bg-info { background-color: #d1ecf1; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        .text-dark { color: #343a40; }
-                        tfoot { display: table-row-group; }
-                        tfoot tr { page-break-inside: avoid; }
-                        @media print {
-                            .row { display: flex; flex-wrap: nowrap; }
-                            .col-md-5  { flex: 0 0 auto; width: 41.6666666667%; }
-                            .col-md-6  { flex: 0 0 auto; width: 50%; }
-                            .col-md-7  { flex: 0 0 auto; width: 58.3333333333%; }
-                            .col-md-12 { flex: 0 0 auto; width: 100%; }
-                            tr { page-break-inside: avoid; }
-                            .table-footer { position: relative; bottom: 0; page-break-inside: avoid; }
-                            .table-footer::after { content: ''; display: block; height: 1px; page-break-after: auto; }
-                        }
-                    </style>
-                </head>
-                <body onload="window.print(); setTimeout(function(){window.close();}, 1);">
-                    ${printContents}
-                </body>
-            </html>
-        `);
-		printWindow.document.close();
-	});
+$(document).ready(function () { feather.replace(); });
+
+$('.printButton').on('click', function () {
+	var content = document.getElementById('printThis').innerHTML;
+	var win = window.open('', '_blank');
+	win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Invoice <?= htmlspecialchars($data->invoiceNumber) ?></title>
+	<style>
+		* { box-sizing: border-box; margin: 0; padding: 0; }
+		body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background: #fff; padding: 32px 40px; font-size: 13px; }
+		img { max-width: 100%; height: auto; }
+		table { border-collapse: collapse; }
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		@page { margin: 15mm 15mm; size: A4; }
+	</style>
+</head>
+<body onload="window.print(); setTimeout(function(){ window.close(); }, 500);">
+${content}
+</body>
+</html>`);
+	win.document.close();
+});
 </script>

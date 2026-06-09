@@ -173,7 +173,7 @@
 									<div class="d-flex justify-content-between align-items-center mb-2">
 										<div class="d-flex align-items-center gap-2">
 											<span class="text-muted small">Tax</span>
-											<div class="input-group input-group-sm" style="width:90px;">
+											<div class="input-group input-group-sm" style="width:110px;">
 												<input type="number" step="any" min="0" name="taxPercentage" id="taxPercentage"
 												       class="form-control form-control-sm" value="<?= $data->taxPercentage ?>" placeholder="0">
 												<span class="input-group-text">%</span>
@@ -202,26 +202,64 @@
 							</div>
 
 							<!-- Record New Payment -->
-							<div class="rounded-3 p-3" style="background:#f0fdf4;border:1px solid #bbf7d0;">
-								<div class="fw-semibold small mb-2" style="color:#166534;text-transform:uppercase;letter-spacing:.06em;">
-									<i data-feather="dollar-sign" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>
-									Record New Payment
-								</div>
-								<div class="mb-2">
-									<label class="form-label small fw-semibold mb-1">Amount (CAD)</label>
-									<div class="input-group input-group-sm">
-										<span class="input-group-text">$</span>
-										<input type="number" step="0.01" min="0" id="newPaymentAmount"
-										       name="paidAmount" placeholder="0.00"
-										       class="form-control"
-										       max="<?= $data->total - $data->paidAmount ?>">
+							<div class="card border-success shadow-sm">
+								<div class="card-header bg-success-subtle border-success">
+									<div class="fw-semibold text-success">
+										<i data-feather="dollar-sign" class="me-1"></i>
+										Record New Payment
 									</div>
 								</div>
-								<div>
-									<label class="form-label small fw-semibold mb-1">Note <span class="text-muted fw-normal">(optional)</span></label>
-									<input type="text" name="payNote" id="payNote"
-									       class="form-control form-control-sm"
-									       placeholder="e.g. Cheque #123, e-transfer…">
+
+								<div class="card-body">
+									<!-- Row 1 -->
+									<div class="row g-3">
+										<div class="col-md-6">
+											<label for="newPaymentDate" class="form-label fw-semibold">
+												Payment Date
+											</label>
+											<input
+												type="text"
+												id="newPaymentDate"
+												name="payDate"
+												class="form-control"
+												placeholder="Select date">
+										</div>
+
+										<div class="col-md-6">
+											<label for="newPaymentAmount" class="form-label fw-semibold">
+												Amount (CAD)
+											</label>
+											<div class="input-group">
+												<span class="input-group-text">$</span>
+												<input
+													type="number"
+													step="0.01"
+													min="0"
+													id="newPaymentAmount"
+													name="paidAmount"
+													class="form-control"
+													placeholder="0.00"
+													max="<?= $data->total - $data->paidAmount ?>">
+											</div>
+										</div>
+									</div>
+
+									<!-- Row 2 -->
+									<div class="row mt-3">
+										<div class="col-12">
+											<label for="payNote" class="form-label fw-semibold">
+												Payment Note
+												<span class="text-muted fw-normal">(Optional)</span>
+											</label>
+											<input
+												type="text"
+												name="payNote"
+												id="payNote"
+												class="form-control"
+												placeholder="Cheque #123, E-transfer, Bank Deposit, etc.">
+										</div>
+									</div>
+
 								</div>
 							</div>
 
@@ -260,6 +298,7 @@ $('.close').on('click', function () { $('#remoteModal1').modal('hide'); });
 
 $(document).ready(function () {
 	$('#invoiceDate, #dueDate').flatpickr({ static: true, dateFormat: 'd M Y' });
+	$('#newPaymentDate').flatpickr({ static: true, dateFormat: 'd M Y', defaultDate: 'today' });
 	feather.replace();
 });
 

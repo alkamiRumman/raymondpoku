@@ -859,6 +859,8 @@ class Admin extends MY_Controller
 			$arr['status'] = 'Partial Paid';
 		}
 		$now = date('Y-m-d H:i:s');
+		$payDateRaw = $this->input->post('payDate');
+		$paidAt = $payDateRaw ? date('Y-m-d', strtotime($payDateRaw)) . ' ' . date('H:i:s') : $now;
 		$ar['updateAt'] = $arr['updateAt'] = $now;
 		$client              = $this->admin->getClientsById($clientId);
 		$ar['totalPaid']     = $client->totalPaid + $paidAmount;
@@ -870,7 +872,7 @@ class Admin extends MY_Controller
 				'invoiceId' => $id,
 				'amount'    => $paidAmount,
 				'note'      => $this->input->post('payNote'),
-				'paidAt'    => $now,
+				'paidAt'    => $paidAt,
 			]);
 		}
 		$this->session->set_flashdata('success', 'Invoice updated successfully.');
