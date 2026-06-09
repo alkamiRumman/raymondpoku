@@ -57,8 +57,6 @@
 			order: [[1, "ASC"]],
 			stateSave: true,
 			scrollX: true,
-			scrollY: '65vh',
-			scrollCollapse: true,
 			fixedColumns: { leftColumns: 2 },
 			"columnDefs": [
 				{

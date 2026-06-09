@@ -50,7 +50,11 @@ $(document).ready(function () {
 			{
 				data: null, orderable: false,
 				render: function (data, type, row) {
-					return '<a href="javascript:void(0);" onclick="confirmDeletePayment(\'<?= admin_url('deletePayment/') ?>' + row.id + '\')" '
+					return '<a href="javascript:void(0);" onclick="loadPopup(\'<?= admin_url('viewPayment/') ?>' + row.id + '\')" '
+						+ 'class="btn btn-xs btn-info px-2 py-1 me-1" title="View"><i class="feather icon-eye"></i></a>'
+						+ '<a href="javascript:void(0);" onclick="loadPopup(\'<?= admin_url('editPayment/') ?>' + row.id + '\')" '
+						+ 'class="btn btn-xs btn-warning px-2 py-1 me-1" title="Edit"><i class="feather icon-edit"></i></a>'
+						+ '<a href="javascript:void(0);" onclick="confirmDeletePayment(\'<?= admin_url('deletePayment/') ?>' + row.id + '\')" '
 						+ 'class="btn btn-xs btn-danger px-2 py-1" title="Delete"><i class="feather icon-trash-2"></i></a>';
 				}
 			},

@@ -1097,4 +1097,27 @@ class Admin extends MY_Controller
 		redirect(admin_url('payments'));
 	}
 
+	function viewPayment($id)
+	{
+		$this->data['payment'] = $this->admin->getPaymentById($id);
+		$this->data['items']   = $this->admin->getPaymentItems($id);
+		$this->popupView('/viewPayment');
+	}
+
+	function editPayment($id)
+	{
+		$this->data['payment'] = $this->admin->getPaymentById($id);
+		$this->data['items']   = $this->admin->getPaymentItems($id);
+		$this->popupView('/editPayment');
+	}
+
+	function updatePayment($id)
+	{
+		$paymentDate = date('Y-m-d', strtotime($this->input->post('paymentDate')));
+		$note        = $this->input->post('note');
+		$this->admin->updatePayment(['paymentDate' => $paymentDate, 'note' => $note], $id);
+		$this->session->set_flashdata('success', 'Payment updated successfully.');
+		redirect(admin_url('payments'));
+	}
+
 }

@@ -461,6 +461,11 @@ class Admin_model extends CI_Model
 		return $this->db->insert_id();
 	}
 
+	function updatePayment($arr, $id)
+	{
+		$this->db->update(TABLE_PAYMENTS, $arr, ['id' => $id]);
+	}
+
 	function savePaymentItem($arr)
 	{
 		$this->db->insert(TABLE_PAYMENT_ITEMS, $arr);

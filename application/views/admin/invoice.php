@@ -103,8 +103,6 @@
 			order: [[1, "DESC"]],
 			stateSave: true,
 			scrollX: true,
-			scrollY: '65vh',
-			scrollCollapse: true,
 			fixedColumns: { leftColumns: 2 },
 			initComplete: function () {
 				var state = Table.state.loaded();
