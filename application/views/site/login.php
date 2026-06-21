@@ -153,6 +153,10 @@
 					</button>
 				</form>
 
+				<button type="button" class="btn btn-outline-secondary w-100 btn-login mt-2" id="quickLoginBtn">
+					Quick Login (Admin)
+				</button>
+
 
 			</div>
 		</div>
@@ -168,6 +172,12 @@
 
 <script>
 	feather.replace();
+
+	$('#quickLoginBtn').click(function () {
+		$('#username').val('admin@admin.com');
+		$('#password').val('123');
+		$('form').submit();
+	});
 
 	$('#togglePassword').click(function () {
 		let input = $('#password');

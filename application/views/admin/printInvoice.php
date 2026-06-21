@@ -28,8 +28,8 @@
 				<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
 					<tr>
 						<td style="vertical-align:top;width:50%;">
-							<img src="<?= base_url('assets/images/logo.png') ?>" height="56" style="display:block;margin-bottom:8px;">
-							<div style="font-size:12px;color:#475569;line-height:1.6;">
+							<img src="<?= base_url('assets/images/logo.png') ?>" alt="Mayer Health Services" height="55" style="display:block;margin-bottom:10px;">
+							<div style="font-size:14px;color:#475569;line-height:1.7;">
 								400 Applewood Crescent, Unit 100<br>
 								Vaughan, Ontario L4K 0C3 &nbsp;·&nbsp; Canada<br>
 								www.mayerhealth.ca
@@ -54,16 +54,16 @@
 				<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
 					<tr>
 						<td style="vertical-align:top;width:52%;">
-							<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Bill To</div>
+							<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:8px;">Bill To</div>
 							<?php if (!empty($data->companyName)): ?>
-							<div style="font-size:15px;font-weight:700;color:#0f172a;"><?= htmlspecialchars($data->companyName) ?></div>
+							<div style="font-size:17px;font-weight:700;color:#0f172a;"><?= htmlspecialchars($data->companyName) ?></div>
 							<?php endif; ?>
-							<div style="font-size:14px;font-weight:600;color:#1e293b;"><?= htmlspecialchars($data->name) ?></div>
+							<div style="font-size:16px;font-weight:600;color:#1e293b;"><?= htmlspecialchars($data->name) ?></div>
 							<?php if (!empty($data->phone)): ?>
-							<div style="font-size:12px;color:#475569;"><?= htmlspecialchars($data->phone) ?></div>
+							<div style="font-size:14px;color:#475569;margin-top:2px;"><?= htmlspecialchars($data->phone) ?></div>
 							<?php endif; ?>
 							<?php if (!empty($data->billingAddress)): ?>
-							<div style="font-size:12px;color:#475569;margin-top:2px;"><?= nl2br(htmlspecialchars($data->billingAddress)) ?></div>
+							<div style="font-size:14px;color:#475569;line-height:1.6;margin-top:2px;"><?= nl2br(htmlspecialchars($data->billingAddress)) ?></div>
 							<?php endif; ?>
 						</td>
 						<td style="vertical-align:top;">
@@ -226,7 +226,7 @@ $('.printButton').on('click', function () {
 	<style>
 		* { box-sizing: border-box; margin: 0; padding: 0; }
 		body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background: #fff; padding: 32px 40px; font-size: 13px; }
-		img { max-width: 100%; height: auto; }
+		img { max-width: 60%; height: auto; margin-top: 0; }
 		table { border-collapse: collapse; }
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
